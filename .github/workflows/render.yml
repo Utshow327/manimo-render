@@ -7,10 +7,6 @@ on:
 jobs:
   render:
     runs-on: ubuntu-latest
-    container:
-      image: manimcommunity/manim:stable
-      options: --user root
-      options: --user root
     timeout-minutes: 5
     permissions:
       contents: write
@@ -18,11 +14,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install TTS
-        run: pip install edge-tts
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libcairo2-dev libpango1.0-dev texlive-latex-base texlive-fonts-recommended
+
+      - name: Install Manim + TTS
+        run: pip install manim edge-tts
 
       - name: Render Video
-        run: manim render -qh --resolution 1920,1080 -o output.mp4 scene.py MainScene
+        run: manim render -qh -o output.mp4 scene.py MainScene
 
       - name: Generate Voice
         run: |
