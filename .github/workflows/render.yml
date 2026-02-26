@@ -10,6 +10,7 @@ jobs:
     container:
       image: manimcommunity/manim:stable
       options: --user root
+      options: --user root
     timeout-minutes: 5
     permissions:
       contents: write
