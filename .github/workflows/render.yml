@@ -1,0 +1,54 @@
+name: Render Manim
+on:
+  push:
+    paths: ['scene.py', 'voice_config.json']
+  workflow_dispatch:
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    container:
+      image: manimcommunity/manim:stable
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install TTS
+        run: pip install edge-tts
+
+      - name: Render Video
+        run: manim render -qh --resolution 1920,1080 -o output.mp4 scene.py MainScene
+
+      - name: Generate Voice (if config exists)
+        run: |
+          if [ -f voice_config.json ]; then
+            TEXT=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('text',''))")
+            VOICE=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('voice','en-GB-RyanNeural'))")
+            if [ -n "$TEXT" ]; then
+              python3 -m edge_tts --text "$TEXT" --voice "$VOICE" --write-media narration.mp3
+              VIDEO=$(find media -name "output.mp4" | head -1)
+              if [ -f narration.mp3 ] && [ -n "$VIDEO" ]; then
+                apt-get update && apt-get install -y ffmpeg 2>/dev/null || true
+                ffmpeg -y -i "$VIDEO" -i narration.mp3 -c:v copy -c:a aac -b:a 192k -filter_complex "[1:a]apad[a]" -map 0:v -map "[a]" -shortest merged.mp4
+                cp merged.mp4 "$VIDEO"
+              fi
+            fi
+          fi
+
+      - name: Find output
+        id: find
+        run: |
+          VIDEO=$(find media -name "output.mp4" | head -1)
+          echo "video=$VIDEO" >> $GITHUB_OUTPUT
+          echo "Found: $VIDEO"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: render-${{ github.run_number }}
+          name: Render ${{ github.run_number }}
+          files: ${{ steps.find.outputs.video }}
+          make_latest: true
