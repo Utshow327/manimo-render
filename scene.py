@@ -1,15 +1,25 @@
 from manim import *
 
-class TwoBallsUp(Scene):
+class SimpleAnimation(Scene):
     def construct(self):
-            ball1 = Circle(radius=0.4).shift(LEFT*2 + DOWN*3)
-                    ball2 = Circle(radius=0.4).shift(RIGHT*2 + DOWN*3)
+        # Create text
+        title = Text("Simple Manim Animation")
+        self.play(Write(title))
+        self.wait(1)
 
-                            self.play(
-                                        ball1.animate.shift(UP*6),
-                                                    ball2.animate.shift(UP*6),
-                                                                run_time=2,
-                                                                            rate_func=smooth
-                                                                                    )
+        # Move text to top
+        self.play(title.animate.to_edge(UP))
 
-                                                                                            self.wait()
+        # Create a circle
+        circle = Circle()
+        self.play(Create(circle))
+        self.wait(1)
+
+        # Transform circle into square
+        square = Square()
+        self.play(Transform(circle, square))
+        self.wait(1)
+
+        # Fade everything out
+        self.play(FadeOut(title), FadeOut(circle))
+        self.wait(1)
