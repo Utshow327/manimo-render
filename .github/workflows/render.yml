@@ -1,7 +1,7 @@
 name: Render Manim
 on:
   push:
-    paths: ['scene.py', 'voice_config.json']
+    paths: ['scene.py', 'voice_config.json', 'render_config.json']
   workflow_dispatch:
 
 jobs:
@@ -19,13 +19,43 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-manim-${{ runner.os }}-py3.12
+          restore-keys: pip-manim-
+
+      - name: Cache apt packages
+        uses: actions/cache@v4
+        with:
+          path: ~/apt-cache
+          key: apt-manim-v2
+          restore-keys: apt-manim-
+
       - name: Install system deps
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg libcairo2-dev libpango1.0-dev texlive-latex-base texlive-fonts-recommended
+          if [ -d ~/apt-cache ] && [ "$(ls ~/apt-cache/*.deb 2>/dev/null | head -1)" ]; then
+            sudo dpkg -i ~/apt-cache/*.deb 2>/dev/null || true
+            sudo apt-get install -f -y 2>/dev/null || true
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libcairo2-dev libpango1.0-dev texlive-latex-base texlive-fonts-recommended
+          mkdir -p ~/apt-cache
+          cp /var/cache/apt/archives/*.deb ~/apt-cache/ 2>/dev/null || true
 
       - name: Install Manim + TTS
         run: pip install manim edge-tts
+
+      - name: Read config
+        id: config
+        run: |
+          if [ -f render_config.json ]; then
+            HASH=$(python3 -c "import json; print(json.load(open('render_config.json')).get('hash','none'))")
+          else
+            HASH=$(sha256sum scene.py | cut -c1-12)
+          fi
+          echo "hash=$HASH" >> $GITHUB_OUTPUT
 
       - name: Render Video
         run: manim render -qh -o output.mp4 scene.py MainScene
@@ -55,7 +85,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: render-${{ github.run_number }}
-          name: Render ${{ github.run_number }}
+          tag_name: v-${{ steps.config.outputs.hash }}
+          name: Render ${{ steps.config.outputs.hash }}
           files: ${{ steps.find.outputs.video }}
           make_latest: true
