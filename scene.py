@@ -1,525 +1,675 @@
 from manim import *
-import numpy as np
 
-config.frame_width = 9
-config.frame_height = 16
-config.pixel_width = 1080
 config.pixel_height = 1920
+config.pixel_width = 1080
+config.frame_height = 14.0
+config.frame_width = 14.0 * 9 / 16
+config.background_color = WHITE
 
-class VectorFieldsExplainer(Scene):
+class ThermodynamicsLaws(Scene):
     def construct(self):
-        self.camera.background_color = "#000000"
-        
-        # Gravitational Field
-        self.show_gravitational_field()
-        
-        # Electric Field
-        self.show_electric_field()
-        
-        # Magnetic Field
-        self.show_magnetic_field()
-    
-    def show_gravitational_field(self):
-        # Title
-        grav_title = Text("GRAVITATIONAL FIELD", font_size=56, weight=BOLD)
-        grav_title.set_color_by_gradient(ORANGE, RED)
-        grav_title.to_edge(UP, buff=0.5)
-        
-        desc = Text("Mass attracts mass", font_size=28, color=GRAY_A)
-        desc.next_to(grav_title, DOWN, buff=0.3)
-        
-        self.play(
-            Write(grav_title, run_time=1),
-            FadeIn(desc, shift=DOWN*0.2)
-        )
-        self.wait(0.5)
-        
-        # Central mass (planet/star)
-        center = ORIGIN + UP*0.3
-        planet = Circle(radius=0.5, color=ORANGE, fill_opacity=1, stroke_width=0)
-        planet.move_to(center)
-        planet.set_sheen(-0.8, UP)
-        
-        # Glow effect
-        glow_layers = VGroup()
-        for i in range(5):
-            glow = Circle(radius=0.5 + i*0.15, color=ORANGE, fill_opacity=0.1/(i+1), stroke_width=0)
-            glow.move_to(center)
-            glow_layers.add(glow)
-        
-        self.play(
-            FadeIn(planet, scale=0.5),
-            FadeIn(glow_layers, lag_ratio=0.2),
-            run_time=1.2
-        )
-        self.wait(0.3)
-        
-        # Radial gravitational field vectors pointing INWARD
-        field_vectors = VGroup()
-        for r in np.linspace(1.2, 3.5, 8):
-            num_vectors = int(12 * r)
-            for i in range(num_vectors):
-                angle = (i / num_vectors) * 2 * PI
-                pos = center + r * np.array([np.cos(angle), np.sin(angle), 0])
-                
-                # Vector points TOWARD center (attraction)
-                direction = center - pos
-                dist = np.linalg.norm(direction)
-                if dist > 0:
-                    direction = direction / dist
-                    
-                # Length inversely proportional to distance squared
-                length = 0.5 / (r**1.5)
-                end = pos + direction * length
-                
-                # Color fades with distance
-                color = interpolate_color(RED, ORANGE, (r - 1.2) / 2.3)
-                arrow = Arrow(pos, end, buff=0, stroke_width=4, 
-                            color=color, max_tip_length_to_length_ratio=0.3)
-                field_vectors.add(arrow)
-        
-        self.play(
-            LaggedStart(*[GrowArrow(arrow) for arrow in field_vectors],
-                       lag_ratio=0.008, run_time=2)
-        )
-        self.wait(0.5)
-        
-        # Test mass orbiting
-        test_mass = Dot(radius=0.12, color=BLUE)
-        test_mass.set_sheen(-0.5, UP)
-        orbit_radius = 2.2
-        test_mass.move_to(center + RIGHT * orbit_radius)
-        
-        trail = TracedPath(test_mass.get_center, stroke_width=2, stroke_color=BLUE, stroke_opacity=0.6)
-        self.add(trail)
-        
-        self.play(FadeIn(test_mass, scale=0.5))
-        
-        # Orbit animation
-        self.play(
-            Rotate(test_mass, angle=4*PI, about_point=center, run_time=4, rate_func=linear)
-        )
-        self.wait(0.3)
-        
-        # Add another falling mass
-        falling_mass = Dot(radius=0.1, color=YELLOW)
-        falling_mass.set_sheen(-0.5, UP)
-        falling_mass.move_to(center + UP*3.5 + RIGHT*1)
-        
-        falling_trail = TracedPath(falling_mass.get_center, stroke_width=2, stroke_color=YELLOW, stroke_opacity=0.6)
-        self.add(falling_trail)
-        
-        self.play(FadeIn(falling_mass, scale=0.5))
-        
-        # Fall toward planet in spiral
-        fall_path = []
-        current_angle = np.arctan2(1, 3.5)
-        current_r = np.sqrt(1**2 + 3.5**2)
-        
-        for i in range(60):
-            current_r -= 0.04
-            current_angle += 0.08
-            if current_r < 0.6:
-                current_r = 0.6
-            pos = center + current_r * np.array([np.cos(current_angle), np.sin(current_angle), 0])
-            fall_path.append(pos)
-        
-        self.play(
-            MoveAlongPath(falling_mass, VMobject().set_points_as_corners(fall_path)),
-            Rotate(test_mass, angle=2*PI, about_point=center, rate_func=linear),
-            run_time=2.5
-        )
-        self.wait(0.5)
-        
-        # Formula
-        formula = MathTex(
-            r"\vec{F} = -\frac{GMm}{r^2}\hat{r}",
-            font_size=48,
-            color=ORANGE
-        )
-        formula.to_edge(DOWN, buff=0.8)
-        formula_box = SurroundingRectangle(formula, buff=0.25, color=ORANGE, stroke_width=2)
-        
-        self.play(
-            Write(formula),
-            Create(formula_box),
-            run_time=1.2
-        )
-        self.wait(1.2)
-        
-        self.play(
-            FadeOut(grav_title),
-            FadeOut(desc),
-            FadeOut(planet),
-            FadeOut(glow_layers),
-            FadeOut(field_vectors),
-            FadeOut(test_mass),
-            FadeOut(falling_mass),
-            FadeOut(trail),
-            FadeOut(falling_trail),
-            FadeOut(formula),
-            FadeOut(formula_box),
-            run_time=1
-        )
-        self.wait(0.3)
-    
-    def show_electric_field(self):
-        # Title
-        elec_title = Text("ELECTRIC FIELD", font_size=56, weight=BOLD)
-        elec_title.set_color_by_gradient(BLUE, PURPLE)
-        elec_title.to_edge(UP, buff=0.5)
-        
-        desc = Text("Opposite charges attract", font_size=28, color=GRAY_A)
-        desc.next_to(elec_title, DOWN, buff=0.3)
-        
-        self.play(
-            Write(elec_title, run_time=1),
-            FadeIn(desc, shift=DOWN*0.2)
-        )
-        self.wait(0.5)
-        
-        # Positive charge on left
-        pos_charge_center = LEFT * 2 + UP * 0.5
-        pos_charge = Circle(radius=0.4, color=RED, fill_opacity=1, stroke_width=3, stroke_color=WHITE)
-        pos_charge.move_to(pos_charge_center)
-        pos_label = Text("+", font_size=80, color=WHITE, weight=BOLD)
-        pos_label.move_to(pos_charge_center)
-        
-        # Negative charge on right
-        neg_charge_center = RIGHT * 2 + UP * 0.5
-        neg_charge = Circle(radius=0.4, color=BLUE, fill_opacity=1, stroke_width=3, stroke_color=WHITE)
-        neg_charge.move_to(neg_charge_center)
-        neg_label = Text("−", font_size=80, color=WHITE, weight=BOLD)
-        neg_label.move_to(neg_charge_center)
-        
-        # Electric glow
-        pos_glow = VGroup()
-        for i in range(4):
-            g = Circle(radius=0.4 + i*0.2, color=RED, fill_opacity=0.08/(i+1), stroke_width=0)
-            g.move_to(pos_charge_center)
-            pos_glow.add(g)
-        
-        neg_glow = VGroup()
-        for i in range(4):
-            g = Circle(radius=0.4 + i*0.2, color=BLUE, fill_opacity=0.08/(i+1), stroke_width=0)
-            g.move_to(neg_charge_center)
-            neg_glow.add(g)
-        
-        self.play(
-            FadeIn(pos_charge, scale=0.5),
-            FadeIn(neg_charge, scale=0.5),
-            FadeIn(pos_glow, lag_ratio=0.2),
-            FadeIn(neg_glow, lag_ratio=0.2),
-            run_time=1
-        )
-        self.play(
-            Write(pos_label),
-            Write(neg_label)
-        )
+        self.zeroth_law()
         self.wait(0.4)
         
-        # Electric field lines (dipole field)
-        field_lines = VGroup()
+        self.first_law()
+        self.wait(0.4)
         
-        # Lines from positive to negative
-        num_lines = 16
-        for i in range(num_lines):
-            angle = (i / num_lines) * 2 * PI
-            
-            # Start from positive charge
-            start_point = pos_charge_center + 0.5 * np.array([np.cos(angle), np.sin(angle), 0])
-            
-            # Create curved path to negative charge
-            points = [start_point]
-            current_pos = start_point.copy()
-            
-            for step in range(40):
-                # Calculate field at current position
-                to_pos = pos_charge_center - current_pos
-                to_neg = neg_charge_center - current_pos
-                
-                dist_pos = np.linalg.norm(to_pos)
-                dist_neg = np.linalg.norm(to_neg)
-                
-                if dist_pos > 0.1 and dist_neg > 0.1:
-                    field_pos = -to_pos / (dist_pos**2.5)
-                    field_neg = to_neg / (dist_neg**2.5)
-                    total_field = field_pos + field_neg
-                    
-                    # Normalize
-                    mag = np.linalg.norm(total_field)
-                    if mag > 0.01:
-                        total_field = total_field / mag
-                        current_pos += total_field * 0.08
-                        points.append(current_pos.copy())
-                    else:
-                        break
-                    
-                    # Stop if reached negative charge
-                    if dist_neg < 0.6:
-                        break
-                else:
-                    break
-            
-            if len(points) > 5:
-                line = VMobject(stroke_width=2.5)
-                line.set_points_as_corners(points)
-                line.set_color_by_gradient(RED, PURPLE, BLUE)
-                field_lines.add(line)
+        self.second_law()
+        self.wait(0.4)
+        
+        self.third_law()
+        self.wait(0.4)
+    
+    def zeroth_law(self):
+        law_title = Text("Zeroth Law", font_size=52, weight=BOLD)
+        law_title.set_color_by_gradient(BLUE, TEAL, GREEN)
+        law_title.to_edge(UP, buff=0.6)
+        
+        subtitle = Text("Thermal Equilibrium", font_size=30, color=DARK_GRAY)
+        subtitle.next_to(law_title, DOWN, buff=0.3)
         
         self.play(
-            LaggedStart(*[Create(line) for line in field_lines],
-                       lag_ratio=0.05, run_time=2.5)
-        )
-        self.wait(0.5)
-        
-        # Test charges moving
-        test_positive = Dot(radius=0.1, color=YELLOW)
-        test_positive.move_to(UP * 3 + LEFT * 0.5)
-        test_pos_label = Text("+", font_size=30, color=WHITE)
-        test_pos_label.move_to(test_positive.get_center())
-        
-        test_negative = Dot(radius=0.1, color=TEAL)
-        test_negative.move_to(DOWN * 2.5 + RIGHT * 0.5)
-        test_neg_label = Text("−", font_size=30, color=WHITE)
-        test_neg_label.move_to(test_negative.get_center())
-        
-        self.play(
-            FadeIn(test_positive, scale=0.5),
-            FadeIn(test_negative, scale=0.5),
-            FadeIn(test_pos_label),
-            FadeIn(test_neg_label)
-        )
-        
-        # Move test charges
-        # Positive test charge: repelled by + , attracted to -
-        pos_target = RIGHT * 1.5 + DOWN * 0.3
-        # Negative test charge: attracted to +, repelled by -
-        neg_target = LEFT * 1.5 + UP * 1.3
-        
-        self.play(
-            test_positive.animate.move_to(pos_target),
-            test_pos_label.animate.move_to(pos_target),
-            test_negative.animate.move_to(neg_target),
-            test_neg_label.animate.move_to(neg_target),
-            run_time=2,
-            rate_func=smooth
-        )
-        self.wait(0.5)
-        
-        # Formula
-        formula = MathTex(
-            r"\vec{E} = \frac{kQ}{r^2}\hat{r}",
-            font_size=48,
-            color=PURPLE
-        )
-        formula.to_edge(DOWN, buff=0.8)
-        formula_box = SurroundingRectangle(formula, buff=0.25, color=PURPLE, stroke_width=2)
-        
-        self.play(
-            Write(formula),
-            Create(formula_box),
+            Write(law_title, run_time=1),
+            FadeIn(subtitle, shift=DOWN*0.3),
             run_time=1.2
         )
-        self.wait(1.2)
+        self.wait(0.3)
+        
+        # Three systems with moving particles
+        system_a = Circle(radius=1, stroke_width=5)
+        system_a.set_stroke(RED)
+        system_a.set_fill(RED, opacity=0.05)
+        
+        system_b = Circle(radius=1, stroke_width=5)
+        system_b.set_stroke(RED)
+        system_b.set_fill(RED, opacity=0.05)
+        
+        system_c = Circle(radius=1, stroke_width=5)
+        system_c.set_stroke(BLUE)
+        system_c.set_fill(BLUE, opacity=0.05)
+        
+        system_a.move_to(UP * 2.5)
+        system_b.move_to(DOWN * 0.5)
+        system_c.move_to(DOWN * 4)
+        
+        label_a = Text("A", font_size=36, weight=BOLD)
+        label_a.set_color_by_gradient(RED, ORANGE)
+        label_a.move_to(system_a.get_center() + LEFT*1.6)
+        
+        label_b = Text("B", font_size=36, weight=BOLD)
+        label_b.set_color_by_gradient(RED, ORANGE)
+        label_b.move_to(system_b.get_center() + LEFT*1.6)
+        
+        label_c = Text("C", font_size=36, weight=BOLD)
+        label_c.set_color_by_gradient(BLUE, TEAL)
+        label_c.move_to(system_c.get_center() + LEFT*1.6)
+        
+        # Fast moving particles for hot
+        particles_a = VGroup()
+        for _ in range(8):
+            p = Dot(radius=0.1)
+            p.set_color_by_gradient(RED, ORANGE)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(system_a.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
+            particles_a.add(p)
+        
+        particles_b = VGroup()
+        for _ in range(8):
+            p = Dot(radius=0.1)
+            p.set_color_by_gradient(RED, ORANGE)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(system_b.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
+            particles_b.add(p)
+        
+        # Slow moving particles for cold
+        particles_c = VGroup()
+        for _ in range(8):
+            p = Dot(radius=0.1)
+            p.set_color_by_gradient(BLUE, TEAL)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(system_c.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
+            particles_c.add(p)
         
         self.play(
-            FadeOut(elec_title),
-            FadeOut(desc),
-            FadeOut(pos_charge),
-            FadeOut(neg_charge),
-            FadeOut(pos_label),
-            FadeOut(neg_label),
-            FadeOut(pos_glow),
-            FadeOut(neg_glow),
-            FadeOut(field_lines),
-            FadeOut(test_positive),
-            FadeOut(test_negative),
-            FadeOut(test_pos_label),
-            FadeOut(test_neg_label),
-            FadeOut(formula),
-            FadeOut(formula_box),
+            Create(system_a),
+            Create(system_b),
+            Create(system_c),
+            Write(label_a),
+            Write(label_b),
+            Write(label_c),
+            LaggedStartMap(FadeIn, particles_a, scale=0.3, lag_ratio=0.1),
+            LaggedStartMap(FadeIn, particles_b, scale=0.3, lag_ratio=0.1),
+            LaggedStartMap(FadeIn, particles_c, scale=0.3, lag_ratio=0.1),
+            run_time=1.5
+        )
+        
+        # Animate particles moving
+        def update_particles(particles, center, speed):
+            for p in particles:
+                angle = np.random.uniform(0, TAU)
+                radius = np.random.uniform(0.3, 0.8)
+                p.move_to(center + np.array([np.cos(angle), np.sin(angle), 0]) * radius)
+        
+        # A and B equilibrium
+        contact_ab = Line(
+            system_a.get_bottom(),
+            system_b.get_top(),
+            stroke_width=8
+        )
+        contact_ab.set_color_by_gradient(RED, ORANGE, YELLOW)
+        
+        self.play(
+            Create(contact_ab),
+            run_time=0.8
+        )
+        
+        # Heat flow animation
+        for _ in range(3):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_a],
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_b],
+                *[p.animate.shift(UP*np.random.uniform(-0.08, 0.08) + RIGHT*np.random.uniform(-0.08, 0.08)) for p in particles_c],
+                run_time=0.4
+            )
+        
+        eq_ab = Text("A = B", font_size=28, weight=BOLD)
+        eq_ab.set_color_by_gradient(RED, ORANGE)
+        eq_ab.next_to(contact_ab, RIGHT, buff=0.3)
+        
+        self.play(Write(eq_ab), run_time=0.6)
+        
+        # B and C equilibrium
+        contact_bc = Line(
+            system_b.get_bottom(),
+            system_c.get_top(),
+            stroke_width=8
+        )
+        contact_bc.set_color_by_gradient(ORANGE, YELLOW, TEAL)
+        
+        self.play(
+            Create(contact_bc),
+            run_time=0.8
+        )
+        
+        # C heats up
+        new_particles_c = VGroup()
+        for _ in range(8):
+            p = Dot(radius=0.1)
+            p.set_color_by_gradient(RED, ORANGE)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(system_c.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
+            new_particles_c.add(p)
+        
+        self.play(
+            system_c.animate.set_stroke(RED).set_fill(RED, opacity=0.05),
+            Transform(particles_c, new_particles_c),
+            label_c.animate.set_color_by_gradient(RED, ORANGE),
+            run_time=1.5
+        )
+        
+        for _ in range(3):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_a],
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_b],
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_c],
+                run_time=0.4
+            )
+        
+        eq_bc = Text("B = C", font_size=28, weight=BOLD)
+        eq_bc.set_color_by_gradient(ORANGE, RED)
+        eq_bc.next_to(contact_bc, RIGHT, buff=0.3)
+        
+        self.play(Write(eq_bc), run_time=0.6)
+        self.wait(0.5)
+        
+        # Therefore A = C
+        conclusion = Text("∴ A = C", font_size=36, weight=BOLD)
+        conclusion.set_color_by_gradient(ORANGE, RED, MAROON)
+        conclusion.to_edge(DOWN, buff=1)
+        
+        self.play(Write(conclusion, run_time=1))
+        self.wait(0.8)
+        
+        self.play(
+            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
             run_time=1
         )
-        self.wait(0.3)
     
-    def show_magnetic_field(self):
-        # Title
-        mag_title = Text("MAGNETIC FIELD", font_size=56, weight=BOLD)
-        mag_title.set_color_by_gradient(GREEN, TEAL)
-        mag_title.to_edge(UP, buff=0.5)
+    def first_law(self):
+        law_title = Text("First Law", font_size=52, weight=BOLD)
+        law_title.set_color_by_gradient(PURPLE, PINK, MAROON)
+        law_title.to_edge(UP, buff=0.6)
         
-        desc = Text("Moving charges create fields", font_size=28, color=GRAY_A)
-        desc.next_to(mag_title, DOWN, buff=0.3)
-        
-        self.play(
-            Write(mag_title, run_time=1),
-            FadeIn(desc, shift=DOWN*0.2)
-        )
-        self.wait(0.5)
-        
-        # Wire with current (vertical)
-        wire_top = UP * 3.5
-        wire_bottom = DOWN * 3.5
-        wire = Line(wire_top, wire_bottom, stroke_width=8, color=GRAY)
-        
-        self.play(Create(wire))
-        self.wait(0.3)
-        
-        # Current arrow
-        current_arrow = Arrow(UP*2.5, UP*1.5, buff=0, stroke_width=6, color=YELLOW, max_tip_length_to_length_ratio=0.3)
-        current_label = Text("I", font_size=36, color=YELLOW, weight=BOLD)
-        current_label.next_to(current_arrow, RIGHT, buff=0.2)
+        subtitle = Text("Energy Conservation", font_size=30, color=DARK_GRAY)
+        subtitle.next_to(law_title, DOWN, buff=0.3)
         
         self.play(
-            GrowArrow(current_arrow),
-            Write(current_label)
+            Write(law_title, run_time=1),
+            FadeIn(subtitle, shift=DOWN*0.3),
+            run_time=1.2
         )
         self.wait(0.3)
         
-        # Electrons flowing (animation)
-        electrons = VGroup()
-        for i in range(12):
-            y_pos = 3.5 - i * 0.6
-            electron = Dot(point=[0, y_pos, 0], radius=0.08, color=BLUE)
-            electron.set_sheen(-0.5, UP)
-            electrons.add(electron)
+        equation = MathTex(
+            r"\Delta U", "=", "Q", "-", "W",
+            font_size=65,
+            color=BLACK
+        )
+        equation.move_to(UP * 1.5)
+        equation[0].set_color_by_gradient(PURPLE, PINK)
+        equation[2].set_color_by_gradient(RED, ORANGE)
+        equation[4].set_color_by_gradient(BLUE, TEAL)
         
-        self.play(FadeIn(electrons, lag_ratio=0.1))
+        self.play(Write(equation, run_time=1.5))
+        self.wait(0.4)
         
-        # Animate electrons flowing down
-        for _ in range(2):
+        # Visual system
+        system = RoundedRectangle(
+            width=5, height=3.5,
+            corner_radius=0.4,
+            stroke_width=6
+        )
+        system.set_stroke(PURPLE)
+        system.set_fill(PURPLE, opacity=0.08)
+        system.move_to(DOWN * 2)
+        
+        # Internal particles
+        internal_particles = VGroup()
+        for _ in range(12):
+            p = Dot(radius=0.12)
+            p.set_color_by_gradient(PURPLE, PINK)
+            x = np.random.uniform(-2, 2)
+            y = np.random.uniform(-1.3, 1.3)
+            p.move_to(system.get_center() + RIGHT*x + UP*y)
+            internal_particles.add(p)
+        
+        self.play(
+            equation.animate.scale(0.6).move_to(UP * 0.8),
+            Create(system),
+            LaggedStartMap(FadeIn, internal_particles, scale=0.3, lag_ratio=0.05),
+            run_time=1.5
+        )
+        
+        # Heat input - particles entering
+        heat_label = Text("Heat In (Q)", font_size=28, weight=BOLD)
+        heat_label.set_color_by_gradient(RED, ORANGE)
+        heat_label.next_to(system, LEFT, buff=1.2).shift(UP*0.5)
+        
+        self.play(Write(heat_label), run_time=0.8)
+        
+        for i in range(4):
+            heat_particle = Dot(radius=0.12)
+            heat_particle.set_color_by_gradient(RED, ORANGE)
+            heat_particle.move_to(system.get_left() + LEFT*1.5 + UP*np.random.uniform(-0.5, 0.5))
+            
             self.play(
-                electrons.animate.shift(DOWN * 3.6),
-                run_time=1.5,
-                rate_func=linear
-            )
-            electrons.shift(UP * 3.6)
-        
-        self.wait(0.3)
-        
-        # Circular magnetic field lines (right-hand rule)
-        field_circles = VGroup()
-        for radius in np.linspace(0.8, 3.2, 8):
-            circle = Circle(radius=radius, color=GREEN, stroke_width=3)
-            circle.set_stroke(opacity=0.7)
-            
-            # Add directional arrows (counterclockwise when current goes up)
-            # Since current goes down in our case, circles go clockwise
-            num_arrows = int(4 * radius)
-            for i in range(num_arrows):
-                angle = (i / num_arrows) * 2 * PI
-                pos = radius * np.array([np.cos(angle), np.sin(angle), 0])
-                
-                # Tangent direction (clockwise)
-                tangent_angle = angle - PI/2
-                tangent = 0.15 * np.array([np.cos(tangent_angle), np.sin(tangent_angle), 0])
-                
-                arrow = Arrow(pos - tangent/2, pos + tangent/2, buff=0, 
-                            stroke_width=2.5, color=TEAL, max_tip_length_to_length_ratio=0.4)
-                field_circles.add(arrow)
-            
-            field_circles.add(circle)
-        
-        self.play(
-            LaggedStart(*[Create(obj) if isinstance(obj, Circle) else GrowArrow(obj) 
-                         for obj in field_circles],
-                       lag_ratio=0.01, run_time=2.5)
-        )
-        
-        # Continue electron flow
-        self.play(
-            electrons.animate.shift(DOWN * 3.6),
-            run_time=1.5,
-            rate_func=linear
-        )
-        electrons.shift(UP * 3.6)
-        
-        self.wait(0.5)
-        
-        # Add compass needles showing field direction
-        compasses = VGroup()
-        compass_positions = [
-            LEFT*2 + UP*1.5,
-            RIGHT*2 + UP*1.5,
-            LEFT*2 + DOWN*1.5,
-            RIGHT*2 + DOWN*1.5,
-        ]
-        
-        for pos in compass_positions:
-            # Calculate magnetic field direction at this point
-            # Field circles clockwise, so tangent is perpendicular to radius
-            radius_vec = pos
-            angle = np.arctan2(pos[1], pos[0])
-            field_angle = angle - PI/2
-            
-            needle = Arrow(
-                pos - 0.3*np.array([np.cos(field_angle), np.sin(field_angle), 0]),
-                pos + 0.3*np.array([np.cos(field_angle), np.sin(field_angle), 0]),
-                buff=0,
-                stroke_width=4,
-                color=RED,
-                max_tip_length_to_length_ratio=0.25
-            )
-            
-            compass_circle = Circle(radius=0.4, stroke_width=2, color=WHITE)
-            compass_circle.move_to(pos)
-            
-            compasses.add(VGroup(compass_circle, needle))
-        
-        self.play(
-            LaggedStart(*[FadeIn(comp, scale=0.5) for comp in compasses],
-                       lag_ratio=0.2, run_time=1.5)
-        )
-        self.wait(0.5)
-        
-        # Reverse current direction
-        reverse_arrow = Arrow(UP*1.5, UP*2.5, buff=0, stroke_width=6, color=YELLOW, max_tip_length_to_length_ratio=0.3)
-        
-        self.play(
-            Transform(current_arrow, reverse_arrow),
-            electrons.animate.shift(UP * 3.6),
-            run_time=1,
-            rate_func=smooth
-        )
-        
-        # Flip compass needles
-        for comp in compasses:
-            needle = comp[1]
-            self.play(
-                Rotate(needle, angle=PI, about_point=needle.get_center()),
+                FadeIn(heat_particle, scale=0.3),
+                heat_particle.animate.move_to(system.get_center() + RIGHT*np.random.uniform(-1.5, 1.5) + UP*np.random.uniform(-1, 1)),
+                *[p.animate.shift(UP*np.random.uniform(-0.1, 0.1) + RIGHT*np.random.uniform(-0.1, 0.1)) for p in internal_particles],
+                system.animate.set_fill(PURPLE, opacity=0.15),
                 run_time=0.6
             )
+            internal_particles.add(heat_particle)
         
-        self.wait(0.5)
+        # Work output - piston movement
+        piston = Rectangle(width=0.4, height=2.5, stroke_width=5)
+        piston.set_stroke(BLUE)
+        piston.set_fill(BLUE, opacity=0.3)
+        piston.next_to(system, RIGHT, buff=0)
         
-        # Formula
-        formula = MathTex(
-            r"\vec{B} = \frac{\mu_0 I}{2\pi r}\hat{\theta}",
-            font_size=48,
-            color=GREEN
-        )
-        formula.to_edge(DOWN, buff=0.8)
-        formula_box = SurroundingRectangle(formula, buff=0.25, color=GREEN, stroke_width=2)
-        
-        self.play(
-            Write(formula),
-            Create(formula_box),
-            run_time=1.2
-        )
-        self.wait(1.2)
+        work_label = Text("Work Out (W)", font_size=28, weight=BOLD)
+        work_label.set_color_by_gradient(BLUE, TEAL)
+        work_label.next_to(piston, RIGHT, buff=0.8)
         
         self.play(
-            FadeOut(mag_title),
-            FadeOut(desc),
-            FadeOut(wire),
-            FadeOut(current_arrow),
-            FadeOut(current_label),
-            FadeOut(electrons),
-            FadeOut(field_circles),
-            FadeOut(compasses),
-            FadeOut(formula),
-            FadeOut(formula_box),
+            FadeIn(piston, shift=LEFT*0.3),
+            Write(work_label),
             run_time=1
         )
-        self.wait(0.5)
+        
+        # Piston moves as particles push
+        for _ in range(3):
+            self.play(
+                piston.animate.shift(RIGHT*0.25),
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.1, 0.2)) for p in internal_particles],
+                run_time=0.5
+            )
+            self.play(
+                piston.animate.shift(LEFT*0.1),
+                *[p.animate.shift(UP*np.random.uniform(-0.1, 0.1) + LEFT*np.random.uniform(0, 0.1)) for p in internal_particles],
+                run_time=0.3
+            )
+        
+        self.wait(0.8)
+        
+        self.play(
+            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
+            run_time=1
+        )
+    
+    def second_law(self):
+        law_title = Text("Second Law", font_size=52, weight=BOLD)
+        law_title.set_color_by_gradient(ORANGE, RED, MAROON)
+        law_title.to_edge(UP, buff=0.6)
+        
+        subtitle = Text("Entropy Increases", font_size=30, color=DARK_GRAY)
+        subtitle.next_to(law_title, DOWN, buff=0.3)
+        
+        self.play(
+            Write(law_title, run_time=1),
+            FadeIn(subtitle, shift=DOWN*0.3),
+            run_time=1.2
+        )
+        self.wait(0.3)
+        
+        entropy_eq = MathTex(
+            r"\Delta S \geq 0",
+            font_size=65,
+            color=BLACK
+        )
+        entropy_eq.set_color_by_gradient(ORANGE, RED)
+        entropy_eq.move_to(UP * 1.2)
+        
+        self.play(Write(entropy_eq, run_time=1.5))
+        self.wait(0.4)
+        
+        # Ordered state
+        ordered_box = Square(side_length=3, stroke_width=4)
+        ordered_box.set_stroke(BLUE)
+        ordered_box.set_fill(BLUE, opacity=0.05)
+        ordered_box.move_to(UP * 0.3 + LEFT * 1.8)
+        
+        ordered_label = Text("Ordered", font_size=28, weight=BOLD)
+        ordered_label.set_color_by_gradient(BLUE, TEAL)
+        ordered_label.next_to(ordered_box, UP, buff=0.3)
+        
+        ordered_particles = VGroup()
+        for i in range(4):
+            for j in range(4):
+                p = Dot(radius=0.12)
+                p.set_color_by_gradient(BLUE, TEAL)
+                p.move_to(ordered_box.get_center() + RIGHT*(j-1.5)*0.5 + UP*(i-1.5)*0.5)
+                ordered_particles.add(p)
+        
+        self.play(
+            entropy_eq.animate.scale(0.7).move_to(UP * 0.5),
+            Create(ordered_box),
+            Write(ordered_label),
+            LaggedStartMap(FadeIn, ordered_particles, scale=0.3, lag_ratio=0.04),
+            run_time=1.5
+        )
+        
+        # Disordered state
+        disordered_box = Square(side_length=3, stroke_width=4)
+        disordered_box.set_stroke(RED)
+        disordered_box.set_fill(RED, opacity=0.05)
+        disordered_box.move_to(UP * 0.3 + RIGHT * 1.8)
+        
+        disordered_label = Text("Disordered", font_size=28, weight=BOLD)
+        disordered_label.set_color_by_gradient(RED, ORANGE)
+        disordered_label.next_to(disordered_box, UP, buff=0.3)
+        
+        disordered_particles = VGroup()
+        import random
+        random.seed(42)
+        for _ in range(16):
+            p = Dot(radius=0.12)
+            p.set_color_by_gradient(RED, ORANGE)
+            x = random.uniform(-1.2, 1.2)
+            y = random.uniform(-1.2, 1.2)
+            p.move_to(disordered_box.get_center() + RIGHT*x + UP*y)
+            disordered_particles.add(p)
+        
+        self.play(
+            Create(disordered_box),
+            Write(disordered_label),
+            LaggedStartMap(FadeIn, disordered_particles, scale=0.3, lag_ratio=0.04),
+            run_time=1.5
+        )
+        
+        # Arrow showing direction
+        arrow = Arrow(
+            ordered_box.get_right() + RIGHT*0.2,
+            disordered_box.get_left() + LEFT*0.2,
+            stroke_width=10,
+            max_tip_length_to_length_ratio=0.3
+        )
+        arrow.set_color_by_gradient(ORANGE, RED)
+        
+        time_label = Text("Time →", font_size=32, weight=BOLD)
+        time_label.set_color_by_gradient(ORANGE, RED)
+        time_label.next_to(arrow, DOWN, buff=0.3)
+        
+        self.play(
+            GrowArrow(arrow),
+            Write(time_label),
+            run_time=1.2
+        )
+        
+        # Animate transition
+        for _ in range(4):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in ordered_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in disordered_particles],
+                run_time=0.4
+            )
+        
+        # Drop of ink in water visualization
+        ink_demo = Circle(radius=1.5, stroke_width=4)
+        ink_demo.set_stroke(GRAY)
+        ink_demo.set_fill(GRAY, opacity=0.05)
+        ink_demo.move_to(DOWN * 3.5)
+        
+        ink_label = Text("Ink Drop", font_size=26, color=DARK_GRAY)
+        ink_label.next_to(ink_demo, DOWN, buff=0.3)
+        
+        # Concentrated ink
+        ink_drop = Dot(radius=0.2, color=PURPLE)
+        ink_drop.move_to(ink_demo.get_center())
+        
+        self.play(
+            Create(ink_demo),
+            Write(ink_label),
+            FadeIn(ink_drop, scale=0.5),
+            run_time=1
+        )
+        
+        # Ink spreads
+        spread_particles = VGroup()
+        for _ in range(20):
+            p = Dot(radius=0.08)
+            p.set_color_by_gradient(PURPLE, PINK)
+            p.move_to(ink_demo.get_center())
+            spread_particles.add(p)
+        
+        self.play(
+            FadeOut(ink_drop),
+            *[p.animate.move_to(ink_demo.get_center() + 
+                np.array([np.cos(i*TAU/20), np.sin(i*TAU/20), 0]) * np.random.uniform(0.5, 1.2))
+                for i, p in enumerate(spread_particles)],
+            ink_demo.animate.set_fill(PURPLE, opacity=0.15),
+            run_time=2
+        )
+        
+        self.wait(0.8)
+        
+        self.play(
+            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
+            run_time=1
+        )
+    
+    def third_law(self):
+        law_title = Text("Third Law", font_size=52, weight=BOLD)
+        law_title.set_color_by_gradient(TEAL, GREEN, BLUE)
+        law_title.to_edge(UP, buff=0.6)
+        
+        subtitle = Text("Absolute Zero", font_size=30, color=DARK_GRAY)
+        subtitle.next_to(law_title, DOWN, buff=0.3)
+        
+        self.play(
+            Write(law_title, run_time=1),
+            FadeIn(subtitle, shift=DOWN*0.3),
+            run_time=1.2
+        )
+        self.wait(0.3)
+        
+        concept = MathTex(
+            r"T \to 0 \text{ K} \Rightarrow S \to 0",
+            font_size=55,
+            color=BLACK
+        )
+        concept.set_color_by_gradient(BLUE, TEAL, GREEN)
+        concept.move_to(UP * 1.2)
+        
+        self.play(Write(concept, run_time=2))
+        self.wait(0.4)
+        
+        # Temperature scale with particle motion
+        temp_systems = VGroup()
+        
+        # Hot system
+        hot_sys = Circle(radius=0.9, stroke_width=4)
+        hot_sys.set_stroke(RED)
+        hot_sys.set_fill(RED, opacity=0.1)
+        hot_sys.move_to(UP * 0.5 + LEFT * 2.2)
+        
+        hot_label = Text("300 K", font_size=26, weight=BOLD)
+        hot_label.set_color_by_gradient(RED, ORANGE)
+        hot_label.next_to(hot_sys, DOWN, buff=0.3)
+        
+        hot_particles = VGroup()
+        for _ in range(10):
+            p = Dot(radius=0.08)
+            p.set_color_by_gradient(RED, ORANGE)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(hot_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.5)
+            hot_particles.add(p)
+        
+        # Warm system
+        warm_sys = Circle(radius=0.9, stroke_width=4)
+        warm_sys.set_stroke(ORANGE)
+        warm_sys.set_fill(ORANGE, opacity=0.1)
+        warm_sys.move_to(DOWN * 1.5 + LEFT * 2.2)
+        
+        warm_label = Text("150 K", font_size=26, weight=BOLD)
+        warm_label.set_color_by_gradient(ORANGE, YELLOW)
+        warm_label.next_to(warm_sys, DOWN, buff=0.3)
+        
+        warm_particles = VGroup()
+        for _ in range(10):
+            p = Dot(radius=0.08)
+            p.set_color_by_gradient(ORANGE, YELLOW)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(warm_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.4)
+            warm_particles.add(p)
+        
+        # Cold system
+        cold_sys = Circle(radius=0.9, stroke_width=4)
+        cold_sys.set_stroke(BLUE)
+        cold_sys.set_fill(BLUE, opacity=0.1)
+        cold_sys.move_to(DOWN * 3.5 + LEFT * 2.2)
+        
+        cold_label = Text("50 K", font_size=26, weight=BOLD)
+        cold_label.set_color_by_gradient(BLUE, TEAL)
+        cold_label.next_to(cold_sys, DOWN, buff=0.3)
+        
+        cold_particles = VGroup()
+        for _ in range(10):
+            p = Dot(radius=0.08)
+            p.set_color_by_gradient(BLUE, TEAL)
+            angle = np.random.uniform(0, TAU)
+            p.move_to(cold_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.25)
+            cold_particles.add(p)
+        
+        # Absolute zero
+        zero_sys = Circle(radius=0.9, stroke_width=4)
+        zero_sys.set_stroke(TEAL)
+        zero_sys.set_fill(TEAL, opacity=0.1)
+        zero_sys.move_to(DOWN * 5.5 + LEFT * 2.2)
+        
+        zero_label = Text("0 K", font_size=26, weight=BOLD)
+        zero_label.set_color_by_gradient(TEAL, GREEN)
+        zero_label.next_to(zero_sys, DOWN, buff=0.3)
+        
+        zero_particles = VGroup()
+        for i in range(10):
+            p = Dot(radius=0.08)
+            p.set_color_by_gradient(TEAL, GREEN)
+            angle = i * TAU / 10
+            p.move_to(zero_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.15)
+            zero_particles.add(p)
+        
+        self.play(
+            concept.animate.scale(0.65).move_to(UP * 0.7),
+            run_time=0.8
+        )
+        
+        # Show hot system
+        self.play(
+            Create(hot_sys),
+            Write(hot_label),
+            LaggedStartMap(FadeIn, hot_particles, scale=0.3, lag_ratio=0.05),
+            run_time=1
+        )
+        
+        # Particles move fast
+        for _ in range(3):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.2, 0.2) + RIGHT*np.random.uniform(-0.2, 0.2)) for p in hot_particles],
+                run_time=0.3
+            )
+        
+        # Show warm system
+        self.play(
+            Create(warm_sys),
+            Write(warm_label),
+            LaggedStartMap(FadeIn, warm_particles, scale=0.3, lag_ratio=0.05),
+            run_time=1
+        )
+        
+        # Particles move medium
+        for _ in range(3):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
+                run_time=0.3
+            )
+        
+        # Show cold system
+        self.play(
+            Create(cold_sys),
+            Write(cold_label),
+            LaggedStartMap(FadeIn, cold_particles, scale=0.3, lag_ratio=0.05),
+            run_time=1
+        )
+        
+        # Particles move slow
+        for _ in range(3):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
+                run_time=0.3
+            )
+        
+        # Show absolute zero
+        self.play(
+            Create(zero_sys),
+            Write(zero_label),
+            LaggedStartMap(FadeIn, zero_particles, scale=0.3, lag_ratio=0.05),
+            run_time=1
+        )
+        
+        # Particles barely move then stop
+        for _ in range(2):
+            self.play(
+                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
+                *[p.animate.shift(UP*np.random.uniform(-0.02, 0.02) + RIGHT*np.random.uniform(-0.02, 0.02)) for p in zero_particles],
+                run_time=0.3
+            )
+        
+        # Final state - all particles stop at absolute zero
+        self.play(
+            *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
+            *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
+            *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
+            zero_sys.animate.set_fill(TEAL, opacity=0.2),
+            run_time=0.5
+        )
+        
+        # Highlight no motion at absolute zero
+        zero_glow = Circle(radius=1.1, stroke_width=0)
+        zero_glow.set_fill(TEAL, opacity=0.3)
+        zero_glow.move_to(zero_sys.get_center())
+        
+        no_motion = Text("No Motion\nZero Entropy", font_size=28, weight=BOLD)
+        no_motion.set_color_by_gradient(TEAL, GREEN)
+        no_motion.move_to(RIGHT * 1.8 + DOWN * 5.5)
+        
+        arrow_to_zero = Arrow(
+            no_motion.get_left(),
+            zero_sys.get_right(),
+            stroke_width=6
+        )
+        arrow_to_zero.set_color_by_gradient(TEAL, GREEN)
+        
+        self.play(
+            FadeIn(zero_glow, scale=0.8),
+            GrowArrow(arrow_to_zero),
+            Write(no_motion),
+            run_time=1.5
+        )
+        
+        self.play(
+            zero_glow.animate.scale(1.3).set_opacity(0),
+            run_time=1
+        )
+        
+        self.wait(1)
+        
+        self.play(
+            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
+            run_time=1
+        )
