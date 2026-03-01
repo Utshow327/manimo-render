@@ -1,675 +1,616 @@
 from manim import *
+import numpy as np
 
+# Configure for 9:16 aspect ratio (shorts format)
 config.pixel_height = 1920
 config.pixel_width = 1080
-config.frame_height = 14.0
-config.frame_width = 14.0 * 9 / 16
+config.frame_height = 16.0
+config.frame_width = 9.0
 config.background_color = WHITE
 
-class ThermodynamicsLaws(Scene):
+class InvestigativeAnimation(Scene):
     def construct(self):
-        self.zeroth_law()
-        self.wait(0.4)
+        # Color system: Blue to purple gradient
+        GRADIENT_START = "#4A90E2"  # Soft blue
+        GRADIENT_END = "#9B59B6"    # Soft purple
+        ACCENT_1 = "#5DADE2"        # Light blue
+        ACCENT_2 = "#AF7AC5"        # Light purple
+        GRADIENT_MID = "#7A7FD9"    # Mid purple-blue
         
-        self.first_law()
-        self.wait(0.4)
+        # Helper function to create gradient fills
+        def create_gradient_fill(mobject, start_color=GRADIENT_START, end_color=GRADIENT_END):
+            mobject.set_fill(color=[start_color, end_color], opacity=0.8)
+            mobject.set_stroke(width=0)
+            return mobject
         
-        self.second_law()
-        self.wait(0.4)
+        # Scene 1: Single human silhouette with floating creative shapes
+        # Duration: ~5 seconds
         
-        self.third_law()
-        self.wait(0.4)
-    
-    def zeroth_law(self):
-        law_title = Text("Zeroth Law", font_size=52, weight=BOLD)
-        law_title.set_color_by_gradient(BLUE, TEAL, GREEN)
-        law_title.to_edge(UP, buff=0.6)
+        # Create human silhouette
+        silhouette = self.create_human_silhouette().scale(1.5)
+        silhouette.move_to(UP * 2)
+        create_gradient_fill(silhouette)
         
-        subtitle = Text("Thermal Equilibrium", font_size=30, color=DARK_GRAY)
-        subtitle.next_to(law_title, DOWN, buff=0.3)
+        # Create floating abstract shapes representing creativity and music
+        creative_shapes = VGroup()
+        for i in range(8):
+            if i % 3 == 0:
+                shape = Circle(radius=0.2 + np.random.random() * 0.12)
+            elif i % 3 == 1:
+                shape = RoundedRectangle(
+                    width=0.4 + np.random.random() * 0.2,
+                    height=0.3 + np.random.random() * 0.15,
+                    corner_radius=0.06
+                )
+            else:
+                shape = RegularPolygon(n=6, radius=0.18 + np.random.random() * 0.1)
+            
+            create_gradient_fill(shape, ACCENT_1, ACCENT_2)
+            angle = i * 2 * PI / 8
+            radius = 2.5 + np.random.random() * 0.6
+            shape.move_to(silhouette.get_center() + np.array([
+                radius * np.cos(angle),
+                radius * np.sin(angle),
+                0
+            ]))
+            creative_shapes.add(shape)
         
+        # Animate scene 1
         self.play(
-            Write(law_title, run_time=1),
-            FadeIn(subtitle, shift=DOWN*0.3),
-            run_time=1.2
+            FadeIn(silhouette, scale=0.95),
+            run_time=1.5,
+            rate_func=smooth
         )
-        self.wait(0.3)
-        
-        # Three systems with moving particles
-        system_a = Circle(radius=1, stroke_width=5)
-        system_a.set_stroke(RED)
-        system_a.set_fill(RED, opacity=0.05)
-        
-        system_b = Circle(radius=1, stroke_width=5)
-        system_b.set_stroke(RED)
-        system_b.set_fill(RED, opacity=0.05)
-        
-        system_c = Circle(radius=1, stroke_width=5)
-        system_c.set_stroke(BLUE)
-        system_c.set_fill(BLUE, opacity=0.05)
-        
-        system_a.move_to(UP * 2.5)
-        system_b.move_to(DOWN * 0.5)
-        system_c.move_to(DOWN * 4)
-        
-        label_a = Text("A", font_size=36, weight=BOLD)
-        label_a.set_color_by_gradient(RED, ORANGE)
-        label_a.move_to(system_a.get_center() + LEFT*1.6)
-        
-        label_b = Text("B", font_size=36, weight=BOLD)
-        label_b.set_color_by_gradient(RED, ORANGE)
-        label_b.move_to(system_b.get_center() + LEFT*1.6)
-        
-        label_c = Text("C", font_size=36, weight=BOLD)
-        label_c.set_color_by_gradient(BLUE, TEAL)
-        label_c.move_to(system_c.get_center() + LEFT*1.6)
-        
-        # Fast moving particles for hot
-        particles_a = VGroup()
-        for _ in range(8):
-            p = Dot(radius=0.1)
-            p.set_color_by_gradient(RED, ORANGE)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(system_a.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
-            particles_a.add(p)
-        
-        particles_b = VGroup()
-        for _ in range(8):
-            p = Dot(radius=0.1)
-            p.set_color_by_gradient(RED, ORANGE)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(system_b.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
-            particles_b.add(p)
-        
-        # Slow moving particles for cold
-        particles_c = VGroup()
-        for _ in range(8):
-            p = Dot(radius=0.1)
-            p.set_color_by_gradient(BLUE, TEAL)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(system_c.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
-            particles_c.add(p)
-        
         self.play(
-            Create(system_a),
-            Create(system_b),
-            Create(system_c),
-            Write(label_a),
-            Write(label_b),
-            Write(label_c),
-            LaggedStartMap(FadeIn, particles_a, scale=0.3, lag_ratio=0.1),
-            LaggedStartMap(FadeIn, particles_b, scale=0.3, lag_ratio=0.1),
-            LaggedStartMap(FadeIn, particles_c, scale=0.3, lag_ratio=0.1),
-            run_time=1.5
+            LaggedStart(*[
+                FadeIn(shape, scale=0.8)
+                for shape in creative_shapes
+            ], lag_ratio=0.15),
+            run_time=2,
+            rate_func=smooth
         )
         
-        # Animate particles moving
-        def update_particles(particles, center, speed):
-            for p in particles:
-                angle = np.random.uniform(0, TAU)
-                radius = np.random.uniform(0.3, 0.8)
-                p.move_to(center + np.array([np.cos(angle), np.sin(angle), 0]) * radius)
-        
-        # A and B equilibrium
-        contact_ab = Line(
-            system_a.get_bottom(),
-            system_b.get_top(),
-            stroke_width=8
-        )
-        contact_ab.set_color_by_gradient(RED, ORANGE, YELLOW)
-        
-        self.play(
-            Create(contact_ab),
-            run_time=0.8
-        )
-        
-        # Heat flow animation
-        for _ in range(3):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_a],
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_b],
-                *[p.animate.shift(UP*np.random.uniform(-0.08, 0.08) + RIGHT*np.random.uniform(-0.08, 0.08)) for p in particles_c],
-                run_time=0.4
+        # Floating animation
+        floating_anims = []
+        for shape in creative_shapes:
+            original_pos = shape.get_center()
+            offset = np.array([
+                (np.random.random() - 0.5) * 0.3,
+                (np.random.random() - 0.5) * 0.3,
+                0
+            ])
+            floating_anims.append(
+                shape.animate.shift(offset).set_opacity(0.9)
             )
         
-        eq_ab = Text("A = B", font_size=28, weight=BOLD)
-        eq_ab.set_color_by_gradient(RED, ORANGE)
-        eq_ab.next_to(contact_ab, RIGHT, buff=0.3)
-        
-        self.play(Write(eq_ab), run_time=0.6)
-        
-        # B and C equilibrium
-        contact_bc = Line(
-            system_b.get_bottom(),
-            system_c.get_top(),
-            stroke_width=8
+        self.play(
+            *floating_anims,
+            run_time=2,
+            rate_func=there_and_back
         )
-        contact_bc.set_color_by_gradient(ORANGE, YELLOW, TEAL)
+        
+        # Scene 2: Transition to abstract documents emerging
+        # Duration: ~4 seconds
+        
+        # Create abstract document shapes
+        documents = VGroup()
+        for i in range(12):
+            doc = RoundedRectangle(
+                width=1.5,
+                height=2.0,
+                corner_radius=0.1
+            )
+            create_gradient_fill(doc, GRADIENT_START, GRADIENT_MID)
+            
+            # Position in a scattered formation (vertical spread)
+            row = i // 3
+            col = i % 3
+            x_pos = (col - 1) * 2.5 + (np.random.random() - 0.5) * 0.5
+            y_pos = (2 - row) * 3.5 + (np.random.random() - 0.5) * 0.5
+            doc.move_to(np.array([x_pos, y_pos, 0]))
+            doc.set_opacity(0)
+            documents.add(doc)
+        
+        # Fade out creative shapes and silhouette while documents emerge
+        self.play(
+            LaggedStart(*[
+                FadeOut(shape, scale=0.9)
+                for shape in creative_shapes
+            ], lag_ratio=0.1),
+            silhouette.animate.scale(0.85).set_opacity(0.3),
+            run_time=1.5,
+            rate_func=smooth
+        )
         
         self.play(
-            Create(contact_bc),
-            run_time=0.8
+            LaggedStart(*[
+                doc.animate.set_opacity(0.8).scale(0.95)
+                for doc in documents
+            ], lag_ratio=0.08),
+            run_time=2.5,
+            rate_func=smooth
         )
         
-        # C heats up
-        new_particles_c = VGroup()
-        for _ in range(8):
-            p = Dot(radius=0.1)
-            p.set_color_by_gradient(RED, ORANGE)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(system_c.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.6)
-            new_particles_c.add(p)
+        # Scene 3: Documents stack and float to center
+        # Duration: ~4 seconds
         
+        # Create stacking positions
+        stack_center = UP * 1
+        stack_positions = []
+        for i in range(12):
+            row = i // 3
+            col = i % 3
+            offset = np.array([
+                (col - 1) * 0.2,
+                (2 - row) * 0.18,
+                0
+            ])
+            stack_positions.append(stack_center + offset)
+        
+        # Animate documents moving to stack
         self.play(
-            system_c.animate.set_stroke(RED).set_fill(RED, opacity=0.05),
-            Transform(particles_c, new_particles_c),
-            label_c.animate.set_color_by_gradient(RED, ORANGE),
-            run_time=1.5
+            silhouette.animate.set_opacity(0).scale(0.5),
+            run_time=0.8,
+            rate_func=smooth
         )
+        self.remove(silhouette)
         
-        for _ in range(3):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_a],
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_b],
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in particles_c],
-                run_time=0.4
+        stack_anims = []
+        for doc, pos in zip(documents, stack_positions):
+            stack_anims.append(
+                doc.animate.move_to(pos).rotate(
+                    (np.random.random() - 0.5) * 0.1
+                )
             )
         
-        eq_bc = Text("B = C", font_size=28, weight=BOLD)
-        eq_bc.set_color_by_gradient(ORANGE, RED)
-        eq_bc.next_to(contact_bc, RIGHT, buff=0.3)
+        self.play(
+            *stack_anims,
+            run_time=2.5,
+            rate_func=smooth
+        )
         
-        self.play(Write(eq_bc), run_time=0.6)
+        # Gentle floating motion
+        self.play(
+            documents.animate.shift(UP * 0.1),
+            run_time=1,
+            rate_func=there_and_back
+        )
+        
+        # Scene 4: Documents move to focal area for examination
+        # Duration: ~3 seconds
+        
+        # Create examination area (subtle glow effect)
+        examination_area = Circle(radius=3.2)
+        examination_area.set_fill(color=[ACCENT_1, GRADIENT_MID], opacity=0.1)
+        examination_area.set_stroke(color=GRADIENT_MID, width=2, opacity=0.3)
+        
+        self.play(
+            FadeIn(examination_area, scale=0.98),
+            documents.animate.arrange_in_grid(rows=4, cols=3, buff=0.3).move_to(UP * 1),
+            run_time=2.5,
+            rate_func=smooth
+        )
+        
         self.wait(0.5)
         
-        # Therefore A = C
-        conclusion = Text("∴ A = C", font_size=36, weight=BOLD)
-        conclusion.set_color_by_gradient(ORANGE, RED, MAROON)
-        conclusion.to_edge(DOWN, buff=1)
+        # Scene 5: Asset transfer - flowing shapes from one cluster to another
+        # Duration: ~5 seconds
         
-        self.play(Write(conclusion, run_time=1))
-        self.wait(0.8)
+        # Fade out documents and examination area
+        self.play(
+            FadeOut(documents, scale=0.95),
+            FadeOut(examination_area, scale=1.02),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        # Create source cluster (top)
+        source_cluster = VGroup()
+        for i in range(6):
+            shape = Circle(radius=0.3 + np.random.random() * 0.12)
+            create_gradient_fill(shape, GRADIENT_START, GRADIENT_MID)
+            angle = i * PI / 3
+            radius = 0.7
+            shape.move_to(UP * 4.5 + np.array([
+                radius * np.cos(angle),
+                radius * np.sin(angle),
+                0
+            ]))
+            source_cluster.add(shape)
+        
+        # Create destination cluster (bottom)
+        dest_cluster = VGroup()
+        for i in range(6):
+            shape = Circle(radius=0.3 + np.random.random() * 0.12)
+            create_gradient_fill(shape, GRADIENT_MID, GRADIENT_END)
+            angle = i * PI / 3 + PI / 6
+            radius = 0.7
+            shape.move_to(DOWN * 4.5 + np.array([
+                radius * np.cos(angle),
+                radius * np.sin(angle),
+                0
+            ]))
+            dest_cluster.add(shape)
+        
+        # Create flowing assets
+        flowing_assets = VGroup()
+        for i in range(5):
+            asset = Circle(radius=0.18)
+            create_gradient_fill(asset, ACCENT_1, ACCENT_2)
+            asset.move_to(UP * 4.5)
+            asset.set_opacity(0)
+            flowing_assets.add(asset)
+        
+        # Animate clusters appearing
+        self.play(
+            LaggedStart(*[
+                FadeIn(shape, scale=0.9)
+                for shape in source_cluster
+            ], lag_ratio=0.1),
+            LaggedStart(*[
+                FadeIn(shape, scale=0.9)
+                for shape in dest_cluster
+            ], lag_ratio=0.1),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        # Create glowing gradient path (vertical)
+        path = CubicBezier(
+            UP * 4.5,
+            UP * 2 + LEFT * 1.5,
+            DOWN * 2 + RIGHT * 1.5,
+            DOWN * 4.5
+        )
+        path.set_stroke(color=[ACCENT_1, GRADIENT_MID, ACCENT_2], width=5, opacity=0.4)
         
         self.play(
-            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
-            run_time=1
-        )
-    
-    def first_law(self):
-        law_title = Text("First Law", font_size=52, weight=BOLD)
-        law_title.set_color_by_gradient(PURPLE, PINK, MAROON)
-        law_title.to_edge(UP, buff=0.6)
-        
-        subtitle = Text("Energy Conservation", font_size=30, color=DARK_GRAY)
-        subtitle.next_to(law_title, DOWN, buff=0.3)
-        
-        self.play(
-            Write(law_title, run_time=1),
-            FadeIn(subtitle, shift=DOWN*0.3),
-            run_time=1.2
-        )
-        self.wait(0.3)
-        
-        equation = MathTex(
-            r"\Delta U", "=", "Q", "-", "W",
-            font_size=65,
-            color=BLACK
-        )
-        equation.move_to(UP * 1.5)
-        equation[0].set_color_by_gradient(PURPLE, PINK)
-        equation[2].set_color_by_gradient(RED, ORANGE)
-        equation[4].set_color_by_gradient(BLUE, TEAL)
-        
-        self.play(Write(equation, run_time=1.5))
-        self.wait(0.4)
-        
-        # Visual system
-        system = RoundedRectangle(
-            width=5, height=3.5,
-            corner_radius=0.4,
-            stroke_width=6
-        )
-        system.set_stroke(PURPLE)
-        system.set_fill(PURPLE, opacity=0.08)
-        system.move_to(DOWN * 2)
-        
-        # Internal particles
-        internal_particles = VGroup()
-        for _ in range(12):
-            p = Dot(radius=0.12)
-            p.set_color_by_gradient(PURPLE, PINK)
-            x = np.random.uniform(-2, 2)
-            y = np.random.uniform(-1.3, 1.3)
-            p.move_to(system.get_center() + RIGHT*x + UP*y)
-            internal_particles.add(p)
-        
-        self.play(
-            equation.animate.scale(0.6).move_to(UP * 0.8),
-            Create(system),
-            LaggedStartMap(FadeIn, internal_particles, scale=0.3, lag_ratio=0.05),
-            run_time=1.5
+            Create(path),
+            run_time=1.5,
+            rate_func=smooth
         )
         
-        # Heat input - particles entering
-        heat_label = Text("Heat In (Q)", font_size=28, weight=BOLD)
-        heat_label.set_color_by_gradient(RED, ORANGE)
-        heat_label.next_to(system, LEFT, buff=1.2).shift(UP*0.5)
+        # Animate assets flowing along path
+        for asset in flowing_assets:
+            self.play(
+                FadeIn(asset, scale=0.8),
+                MoveAlongPath(asset, path),
+                FadeOut(asset, scale=1.1),
+                run_time=1.2,
+                rate_func=smooth
+            )
         
-        self.play(Write(heat_label), run_time=0.8)
+        # Scene 6: Secondary cluster showing connection
+        # Duration: ~4 seconds
         
+        # Create connected cluster (appears to the side of destination)
+        connected_cluster = VGroup()
         for i in range(4):
-            heat_particle = Dot(radius=0.12)
-            heat_particle.set_color_by_gradient(RED, ORANGE)
-            heat_particle.move_to(system.get_left() + LEFT*1.5 + UP*np.random.uniform(-0.5, 0.5))
+            shape = RoundedRectangle(width=0.5, height=0.4, corner_radius=0.1)
+            create_gradient_fill(shape, GRADIENT_END, ACCENT_2)
+            angle = i * PI / 2
+            radius = 0.6
+            shape.move_to(DOWN * 4.5 + RIGHT * 3 + np.array([
+                radius * np.cos(angle),
+                radius * np.sin(angle),
+                0
+            ]))
+            connected_cluster.add(shape)
+        
+        # Connection lines
+        connection_lines = VGroup()
+        for shape in connected_cluster:
+            line = Line(
+                dest_cluster.get_center(),
+                shape.get_center(),
+                buff=0.3
+            )
+            line.set_stroke(color=[GRADIENT_MID, GRADIENT_END], width=3, opacity=0.3)
+            connection_lines.add(line)
+        
+        self.play(
+            FadeOut(path, scale=1.02),
+            run_time=0.5,
+            rate_func=smooth
+        )
+        
+        self.play(
+            LaggedStart(*[
+                Create(line)
+                for line in connection_lines
+            ], lag_ratio=0.15),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        self.play(
+            LaggedStart(*[
+                FadeIn(shape, scale=0.9)
+                for shape in connected_cluster
+            ], lag_ratio=0.1),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        self.wait(0.5)
+        
+        # Scene 7: Public structure with private flow
+        # Duration: ~5 seconds
+        
+        # Fade out previous elements
+        self.play(
+            FadeOut(source_cluster, scale=0.95),
+            FadeOut(dest_cluster, scale=0.95),
+            FadeOut(connected_cluster, scale=0.95),
+            FadeOut(connection_lines, scale=0.95),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        # Create public-facing structure (open form)
+        public_structure = VGroup()
+        outer_ring = Circle(radius=2.5)
+        outer_ring.set_stroke(color=[GRADIENT_START, GRADIENT_MID], width=5, opacity=0.6)
+        outer_ring.set_fill(opacity=0)
+        public_structure.add(outer_ring)
+        
+        for i in range(6):
+            pillar = RoundedRectangle(width=0.4, height=1.2, corner_radius=0.06)
+            create_gradient_fill(pillar, ACCENT_1, GRADIENT_MID)
+            angle = i * PI / 3
+            pillar.move_to(np.array([
+                2.5 * np.cos(angle),
+                2.5 * np.sin(angle),
+                0
+            ]))
+            pillar.rotate(angle + PI / 2)
+            public_structure.add(pillar)
+        
+        public_structure.move_to(UP * 3.5)
+        
+        # Create private enclosed space
+        private_space = VGroup()
+        private_box = RoundedRectangle(width=3.0, height=3.0, corner_radius=0.25)
+        create_gradient_fill(private_box, GRADIENT_MID, GRADIENT_END)
+        private_box.set_opacity(0.6)
+        
+        lock_shape = Circle(radius=0.5)
+        create_gradient_fill(lock_shape, GRADIENT_END, ACCENT_2)
+        lock_shape.move_to(private_box.get_center())
+        
+        private_space.add(private_box, lock_shape)
+        private_space.move_to(DOWN * 3.5)
+        
+        # Animate structures appearing
+        self.play(
+            FadeIn(public_structure, scale=0.95),
+            FadeIn(private_space, scale=0.95),
+            run_time=2,
+            rate_func=smooth
+        )
+        
+        # Create flow from public to private (vertical)
+        flow_path = Line(UP * 3.5, DOWN * 3.5)
+        flow_path.set_stroke(width=0)
+        
+        flowing_particles = VGroup()
+        for i in range(8):
+            particle = Circle(radius=0.12)
+            create_gradient_fill(particle, ACCENT_1, ACCENT_2)
+            particle.move_to(UP * 3.5)
+            particle.set_opacity(0)
+            flowing_particles.add(particle)
+        
+        # Animate particles flowing
+        for i, particle in enumerate(flowing_particles):
+            self.play(
+                FadeIn(particle, scale=0.8),
+                particle.animate.move_to(DOWN * 3.5),
+                FadeOut(particle, scale=1.1),
+                run_time=0.8,
+                rate_func=smooth
+            )
+            if i < len(flowing_particles) - 1:
+                self.wait(0.15)
+        
+        # Scene 8: Handshake motion
+        # Duration: ~4 seconds
+        
+        # Fade out structures
+        self.play(
+            FadeOut(public_structure, scale=0.95),
+            FadeOut(private_space, scale=0.95),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        # Create abstract hands
+        left_hand = self.create_abstract_hand().move_to(UP * 4)
+        create_gradient_fill(left_hand, GRADIENT_START, GRADIENT_MID)
+        left_hand.rotate(PI / 2)
+        
+        right_hand = self.create_abstract_hand().move_to(DOWN * 4)
+        right_hand.rotate(-PI / 2)
+        create_gradient_fill(right_hand, GRADIENT_MID, GRADIENT_END)
+        
+        # Animate handshake
+        self.play(
+            FadeIn(left_hand, scale=0.95),
+            FadeIn(right_hand, scale=0.95),
+            run_time=1,
+            rate_func=smooth
+        )
+        
+        self.play(
+            left_hand.animate.move_to(UP * 0.8),
+            right_hand.animate.move_to(DOWN * 0.8),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        # Glow effect at connection
+        glow = Circle(radius=0.6)
+        glow.set_fill(color=[ACCENT_1, ACCENT_2], opacity=0.2)
+        glow.set_stroke(width=0)
+        glow.move_to(ORIGIN)
+        
+        self.play(
+            FadeIn(glow, scale=0.8),
+            run_time=0.5,
+            rate_func=smooth
+        )
+        
+        self.play(
+            glow.animate.scale(1.5).set_opacity(0),
+            run_time=1,
+            rate_func=smooth
+        )
+        self.remove(glow)
+        
+        # Hands separate
+        self.play(
+            left_hand.animate.move_to(UP * 4),
+            right_hand.animate.move_to(DOWN * 4),
+            run_time=1.5,
+            rate_func=smooth
+        )
+        
+        self.play(
+            FadeOut(left_hand, scale=0.95),
+            FadeOut(right_hand, scale=0.95),
+            run_time=1,
+            rate_func=smooth
+        )
+        
+        # Scene 9: Final scene - documents settling from above
+        # Duration: ~5 seconds
+        
+        # Create final documents
+        final_documents = VGroup()
+        for i in range(20):
+            doc = RoundedRectangle(
+                width=1.0,
+                height=1.4,
+                corner_radius=0.08
+            )
+            create_gradient_fill(doc, GRADIENT_START, GRADIENT_END)
             
-            self.play(
-                FadeIn(heat_particle, scale=0.3),
-                heat_particle.animate.move_to(system.get_center() + RIGHT*np.random.uniform(-1.5, 1.5) + UP*np.random.uniform(-1, 1)),
-                *[p.animate.shift(UP*np.random.uniform(-0.1, 0.1) + RIGHT*np.random.uniform(-0.1, 0.1)) for p in internal_particles],
-                system.animate.set_fill(PURPLE, opacity=0.15),
-                run_time=0.6
-            )
-            internal_particles.add(heat_particle)
+            # Start position above screen (arranged in columns for vertical format)
+            row = i // 4
+            col = i % 4
+            start_x = (col - 1.5) * 1.4
+            start_y = 10 + row * 1.8
+            doc.move_to(np.array([start_x, start_y, 0]))
+            
+            final_documents.add(doc)
         
-        # Work output - piston movement
-        piston = Rectangle(width=0.4, height=2.5, stroke_width=5)
-        piston.set_stroke(BLUE)
-        piston.set_fill(BLUE, opacity=0.3)
-        piston.next_to(system, RIGHT, buff=0)
-        
-        work_label = Text("Work Out (W)", font_size=28, weight=BOLD)
-        work_label.set_color_by_gradient(BLUE, TEAL)
-        work_label.next_to(piston, RIGHT, buff=0.8)
-        
+        # Animate documents falling and settling
         self.play(
-            FadeIn(piston, shift=LEFT*0.3),
-            Write(work_label),
-            run_time=1
+            LaggedStart(*[
+                FadeIn(doc, scale=0.95)
+                for doc in final_documents
+            ], lag_ratio=0.05),
+            run_time=1.5,
+            rate_func=smooth
         )
         
-        # Piston moves as particles push
-        for _ in range(3):
-            self.play(
-                piston.animate.shift(RIGHT*0.25),
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.1, 0.2)) for p in internal_particles],
-                run_time=0.5
-            )
-            self.play(
-                piston.animate.shift(LEFT*0.1),
-                *[p.animate.shift(UP*np.random.uniform(-0.1, 0.1) + LEFT*np.random.uniform(0, 0.1)) for p in internal_particles],
-                run_time=0.3
-            )
+        # Calculate final positions (vertical grid arrangement)
+        final_positions = []
+        for i in range(20):
+            row = i // 4
+            col = i % 4
+            x = (col - 1.5) * 1.4 + (np.random.random() - 0.5) * 0.2
+            y = (3 - row) * 1.8 + (np.random.random() - 0.5) * 0.2
+            final_positions.append(np.array([x, y, 0]))
         
-        self.wait(0.8)
+        # Settle animation
+        settle_anims = []
+        for doc, pos in zip(final_documents, final_positions):
+            settle_anims.append(
+                doc.animate.move_to(pos).rotate(
+                    (np.random.random() - 0.5) * 0.15
+                )
+            )
         
         self.play(
-            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
-            run_time=1
+            *settle_anims,
+            run_time=2.5,
+            rate_func=smooth
         )
+        
+        # Camera slowly zooms in slightly
+        self.play(
+            final_documents.animate.scale(1.08),
+            run_time=2,
+            rate_func=smooth
+        )
+        
+        # Hold final frame
+        self.wait(1.5)
+        
+        # Elegant fade out
+        self.play(
+            FadeOut(final_documents, scale=1.02),
+            run_time=2,
+            rate_func=smooth
+        )
+        
+        self.wait(0.5)
     
-    def second_law(self):
-        law_title = Text("Second Law", font_size=52, weight=BOLD)
-        law_title.set_color_by_gradient(ORANGE, RED, MAROON)
-        law_title.to_edge(UP, buff=0.6)
+    def create_human_silhouette(self):
+        """Create a simplified human silhouette"""
+        silhouette = VGroup()
         
-        subtitle = Text("Entropy Increases", font_size=30, color=DARK_GRAY)
-        subtitle.next_to(law_title, DOWN, buff=0.3)
+        # Head
+        head = Circle(radius=0.3)
+        head.move_to(UP * 1.2)
         
-        self.play(
-            Write(law_title, run_time=1),
-            FadeIn(subtitle, shift=DOWN*0.3),
-            run_time=1.2
-        )
-        self.wait(0.3)
+        # Body
+        body = RoundedRectangle(width=0.8, height=1.2, corner_radius=0.1)
+        body.move_to(DOWN * 0.1)
         
-        entropy_eq = MathTex(
-            r"\Delta S \geq 0",
-            font_size=65,
-            color=BLACK
-        )
-        entropy_eq.set_color_by_gradient(ORANGE, RED)
-        entropy_eq.move_to(UP * 1.2)
+        # Arms
+        left_arm = RoundedRectangle(width=0.25, height=0.9, corner_radius=0.08)
+        left_arm.move_to(LEFT * 0.6 + DOWN * 0.1)
+        left_arm.rotate(PI / 8)
         
-        self.play(Write(entropy_eq, run_time=1.5))
-        self.wait(0.4)
+        right_arm = RoundedRectangle(width=0.25, height=0.9, corner_radius=0.08)
+        right_arm.move_to(RIGHT * 0.6 + DOWN * 0.1)
+        right_arm.rotate(-PI / 8)
         
-        # Ordered state
-        ordered_box = Square(side_length=3, stroke_width=4)
-        ordered_box.set_stroke(BLUE)
-        ordered_box.set_fill(BLUE, opacity=0.05)
-        ordered_box.move_to(UP * 0.3 + LEFT * 1.8)
+        # Legs
+        left_leg = RoundedRectangle(width=0.3, height=1, corner_radius=0.08)
+        left_leg.move_to(LEFT * 0.25 + DOWN * 1.3)
         
-        ordered_label = Text("Ordered", font_size=28, weight=BOLD)
-        ordered_label.set_color_by_gradient(BLUE, TEAL)
-        ordered_label.next_to(ordered_box, UP, buff=0.3)
+        right_leg = RoundedRectangle(width=0.3, height=1, corner_radius=0.08)
+        right_leg.move_to(RIGHT * 0.25 + DOWN * 1.3)
         
-        ordered_particles = VGroup()
-        for i in range(4):
-            for j in range(4):
-                p = Dot(radius=0.12)
-                p.set_color_by_gradient(BLUE, TEAL)
-                p.move_to(ordered_box.get_center() + RIGHT*(j-1.5)*0.5 + UP*(i-1.5)*0.5)
-                ordered_particles.add(p)
+        silhouette.add(head, body, left_arm, right_arm, left_leg, right_leg)
         
-        self.play(
-            entropy_eq.animate.scale(0.7).move_to(UP * 0.5),
-            Create(ordered_box),
-            Write(ordered_label),
-            LaggedStartMap(FadeIn, ordered_particles, scale=0.3, lag_ratio=0.04),
-            run_time=1.5
-        )
-        
-        # Disordered state
-        disordered_box = Square(side_length=3, stroke_width=4)
-        disordered_box.set_stroke(RED)
-        disordered_box.set_fill(RED, opacity=0.05)
-        disordered_box.move_to(UP * 0.3 + RIGHT * 1.8)
-        
-        disordered_label = Text("Disordered", font_size=28, weight=BOLD)
-        disordered_label.set_color_by_gradient(RED, ORANGE)
-        disordered_label.next_to(disordered_box, UP, buff=0.3)
-        
-        disordered_particles = VGroup()
-        import random
-        random.seed(42)
-        for _ in range(16):
-            p = Dot(radius=0.12)
-            p.set_color_by_gradient(RED, ORANGE)
-            x = random.uniform(-1.2, 1.2)
-            y = random.uniform(-1.2, 1.2)
-            p.move_to(disordered_box.get_center() + RIGHT*x + UP*y)
-            disordered_particles.add(p)
-        
-        self.play(
-            Create(disordered_box),
-            Write(disordered_label),
-            LaggedStartMap(FadeIn, disordered_particles, scale=0.3, lag_ratio=0.04),
-            run_time=1.5
-        )
-        
-        # Arrow showing direction
-        arrow = Arrow(
-            ordered_box.get_right() + RIGHT*0.2,
-            disordered_box.get_left() + LEFT*0.2,
-            stroke_width=10,
-            max_tip_length_to_length_ratio=0.3
-        )
-        arrow.set_color_by_gradient(ORANGE, RED)
-        
-        time_label = Text("Time →", font_size=32, weight=BOLD)
-        time_label.set_color_by_gradient(ORANGE, RED)
-        time_label.next_to(arrow, DOWN, buff=0.3)
-        
-        self.play(
-            GrowArrow(arrow),
-            Write(time_label),
-            run_time=1.2
-        )
-        
-        # Animate transition
-        for _ in range(4):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in ordered_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in disordered_particles],
-                run_time=0.4
-            )
-        
-        # Drop of ink in water visualization
-        ink_demo = Circle(radius=1.5, stroke_width=4)
-        ink_demo.set_stroke(GRAY)
-        ink_demo.set_fill(GRAY, opacity=0.05)
-        ink_demo.move_to(DOWN * 3.5)
-        
-        ink_label = Text("Ink Drop", font_size=26, color=DARK_GRAY)
-        ink_label.next_to(ink_demo, DOWN, buff=0.3)
-        
-        # Concentrated ink
-        ink_drop = Dot(radius=0.2, color=PURPLE)
-        ink_drop.move_to(ink_demo.get_center())
-        
-        self.play(
-            Create(ink_demo),
-            Write(ink_label),
-            FadeIn(ink_drop, scale=0.5),
-            run_time=1
-        )
-        
-        # Ink spreads
-        spread_particles = VGroup()
-        for _ in range(20):
-            p = Dot(radius=0.08)
-            p.set_color_by_gradient(PURPLE, PINK)
-            p.move_to(ink_demo.get_center())
-            spread_particles.add(p)
-        
-        self.play(
-            FadeOut(ink_drop),
-            *[p.animate.move_to(ink_demo.get_center() + 
-                np.array([np.cos(i*TAU/20), np.sin(i*TAU/20), 0]) * np.random.uniform(0.5, 1.2))
-                for i, p in enumerate(spread_particles)],
-            ink_demo.animate.set_fill(PURPLE, opacity=0.15),
-            run_time=2
-        )
-        
-        self.wait(0.8)
-        
-        self.play(
-            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
-            run_time=1
-        )
+        return silhouette
     
-    def third_law(self):
-        law_title = Text("Third Law", font_size=52, weight=BOLD)
-        law_title.set_color_by_gradient(TEAL, GREEN, BLUE)
-        law_title.to_edge(UP, buff=0.6)
+    def create_abstract_hand(self):
+        """Create an abstract hand shape"""
+        hand = VGroup()
         
-        subtitle = Text("Absolute Zero", font_size=30, color=DARK_GRAY)
-        subtitle.next_to(law_title, DOWN, buff=0.3)
+        # Palm
+        palm = RoundedRectangle(width=0.6, height=0.8, corner_radius=0.1)
         
-        self.play(
-            Write(law_title, run_time=1),
-            FadeIn(subtitle, shift=DOWN*0.3),
-            run_time=1.2
-        )
-        self.wait(0.3)
+        # Fingers (simplified)
+        finger1 = RoundedRectangle(width=0.15, height=0.5, corner_radius=0.05)
+        finger1.move_to(palm.get_top() + UP * 0.25 + LEFT * 0.2)
         
-        concept = MathTex(
-            r"T \to 0 \text{ K} \Rightarrow S \to 0",
-            font_size=55,
-            color=BLACK
-        )
-        concept.set_color_by_gradient(BLUE, TEAL, GREEN)
-        concept.move_to(UP * 1.2)
+        finger2 = RoundedRectangle(width=0.15, height=0.6, corner_radius=0.05)
+        finger2.move_to(palm.get_top() + UP * 0.3)
         
-        self.play(Write(concept, run_time=2))
-        self.wait(0.4)
+        finger3 = RoundedRectangle(width=0.15, height=0.5, corner_radius=0.05)
+        finger3.move_to(palm.get_top() + UP * 0.25 + RIGHT * 0.2)
         
-        # Temperature scale with particle motion
-        temp_systems = VGroup()
+        # Thumb
+        thumb = RoundedRectangle(width=0.15, height=0.4, corner_radius=0.05)
+        thumb.move_to(palm.get_left() + LEFT * 0.15 + DOWN * 0.1)
+        thumb.rotate(PI / 4)
         
-        # Hot system
-        hot_sys = Circle(radius=0.9, stroke_width=4)
-        hot_sys.set_stroke(RED)
-        hot_sys.set_fill(RED, opacity=0.1)
-        hot_sys.move_to(UP * 0.5 + LEFT * 2.2)
+        hand.add(palm, finger1, finger2, finger3, thumb)
         
-        hot_label = Text("300 K", font_size=26, weight=BOLD)
-        hot_label.set_color_by_gradient(RED, ORANGE)
-        hot_label.next_to(hot_sys, DOWN, buff=0.3)
-        
-        hot_particles = VGroup()
-        for _ in range(10):
-            p = Dot(radius=0.08)
-            p.set_color_by_gradient(RED, ORANGE)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(hot_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.5)
-            hot_particles.add(p)
-        
-        # Warm system
-        warm_sys = Circle(radius=0.9, stroke_width=4)
-        warm_sys.set_stroke(ORANGE)
-        warm_sys.set_fill(ORANGE, opacity=0.1)
-        warm_sys.move_to(DOWN * 1.5 + LEFT * 2.2)
-        
-        warm_label = Text("150 K", font_size=26, weight=BOLD)
-        warm_label.set_color_by_gradient(ORANGE, YELLOW)
-        warm_label.next_to(warm_sys, DOWN, buff=0.3)
-        
-        warm_particles = VGroup()
-        for _ in range(10):
-            p = Dot(radius=0.08)
-            p.set_color_by_gradient(ORANGE, YELLOW)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(warm_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.4)
-            warm_particles.add(p)
-        
-        # Cold system
-        cold_sys = Circle(radius=0.9, stroke_width=4)
-        cold_sys.set_stroke(BLUE)
-        cold_sys.set_fill(BLUE, opacity=0.1)
-        cold_sys.move_to(DOWN * 3.5 + LEFT * 2.2)
-        
-        cold_label = Text("50 K", font_size=26, weight=BOLD)
-        cold_label.set_color_by_gradient(BLUE, TEAL)
-        cold_label.next_to(cold_sys, DOWN, buff=0.3)
-        
-        cold_particles = VGroup()
-        for _ in range(10):
-            p = Dot(radius=0.08)
-            p.set_color_by_gradient(BLUE, TEAL)
-            angle = np.random.uniform(0, TAU)
-            p.move_to(cold_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.25)
-            cold_particles.add(p)
-        
-        # Absolute zero
-        zero_sys = Circle(radius=0.9, stroke_width=4)
-        zero_sys.set_stroke(TEAL)
-        zero_sys.set_fill(TEAL, opacity=0.1)
-        zero_sys.move_to(DOWN * 5.5 + LEFT * 2.2)
-        
-        zero_label = Text("0 K", font_size=26, weight=BOLD)
-        zero_label.set_color_by_gradient(TEAL, GREEN)
-        zero_label.next_to(zero_sys, DOWN, buff=0.3)
-        
-        zero_particles = VGroup()
-        for i in range(10):
-            p = Dot(radius=0.08)
-            p.set_color_by_gradient(TEAL, GREEN)
-            angle = i * TAU / 10
-            p.move_to(zero_sys.get_center() + np.array([np.cos(angle), np.sin(angle), 0]) * 0.15)
-            zero_particles.add(p)
-        
-        self.play(
-            concept.animate.scale(0.65).move_to(UP * 0.7),
-            run_time=0.8
-        )
-        
-        # Show hot system
-        self.play(
-            Create(hot_sys),
-            Write(hot_label),
-            LaggedStartMap(FadeIn, hot_particles, scale=0.3, lag_ratio=0.05),
-            run_time=1
-        )
-        
-        # Particles move fast
-        for _ in range(3):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.2, 0.2) + RIGHT*np.random.uniform(-0.2, 0.2)) for p in hot_particles],
-                run_time=0.3
-            )
-        
-        # Show warm system
-        self.play(
-            Create(warm_sys),
-            Write(warm_label),
-            LaggedStartMap(FadeIn, warm_particles, scale=0.3, lag_ratio=0.05),
-            run_time=1
-        )
-        
-        # Particles move medium
-        for _ in range(3):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
-                run_time=0.3
-            )
-        
-        # Show cold system
-        self.play(
-            Create(cold_sys),
-            Write(cold_label),
-            LaggedStartMap(FadeIn, cold_particles, scale=0.3, lag_ratio=0.05),
-            run_time=1
-        )
-        
-        # Particles move slow
-        for _ in range(3):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
-                run_time=0.3
-            )
-        
-        # Show absolute zero
-        self.play(
-            Create(zero_sys),
-            Write(zero_label),
-            LaggedStartMap(FadeIn, zero_particles, scale=0.3, lag_ratio=0.05),
-            run_time=1
-        )
-        
-        # Particles barely move then stop
-        for _ in range(2):
-            self.play(
-                *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
-                *[p.animate.shift(UP*np.random.uniform(-0.02, 0.02) + RIGHT*np.random.uniform(-0.02, 0.02)) for p in zero_particles],
-                run_time=0.3
-            )
-        
-        # Final state - all particles stop at absolute zero
-        self.play(
-            *[p.animate.shift(UP*np.random.uniform(-0.15, 0.15) + RIGHT*np.random.uniform(-0.15, 0.15)) for p in hot_particles],
-            *[p.animate.shift(UP*np.random.uniform(-0.12, 0.12) + RIGHT*np.random.uniform(-0.12, 0.12)) for p in warm_particles],
-            *[p.animate.shift(UP*np.random.uniform(-0.06, 0.06) + RIGHT*np.random.uniform(-0.06, 0.06)) for p in cold_particles],
-            zero_sys.animate.set_fill(TEAL, opacity=0.2),
-            run_time=0.5
-        )
-        
-        # Highlight no motion at absolute zero
-        zero_glow = Circle(radius=1.1, stroke_width=0)
-        zero_glow.set_fill(TEAL, opacity=0.3)
-        zero_glow.move_to(zero_sys.get_center())
-        
-        no_motion = Text("No Motion\nZero Entropy", font_size=28, weight=BOLD)
-        no_motion.set_color_by_gradient(TEAL, GREEN)
-        no_motion.move_to(RIGHT * 1.8 + DOWN * 5.5)
-        
-        arrow_to_zero = Arrow(
-            no_motion.get_left(),
-            zero_sys.get_right(),
-            stroke_width=6
-        )
-        arrow_to_zero.set_color_by_gradient(TEAL, GREEN)
-        
-        self.play(
-            FadeIn(zero_glow, scale=0.8),
-            GrowArrow(arrow_to_zero),
-            Write(no_motion),
-            run_time=1.5
-        )
-        
-        self.play(
-            zero_glow.animate.scale(1.3).set_opacity(0),
-            run_time=1
-        )
-        
-        self.wait(1)
-        
-        self.play(
-            *[FadeOut(mob, scale=0.7) for mob in self.mobjects],
-            run_time=1
-        )
+        return hand
