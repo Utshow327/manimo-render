@@ -21,5 +21,7 @@ class SimpleAnimation(Scene):
         self.wait(1)
 
         # Fade everything out
-        self.play(FadeOut(title), FadeOut(circle))
-        self.wait(1)
+        self.play(FadeOut(titl
+        dgh r
+        e), Fadecvgb Out(circle))
+        self.wait(3)
