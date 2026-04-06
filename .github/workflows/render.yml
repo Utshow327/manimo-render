@@ -48,7 +48,8 @@ jobs:
         id: render
         continue-on-error: true
         run: |
-          manim render -qh -o output.mp4 scene.py MainScene 2>&1 | tee manim.log
+          # Run manim WITHOUT specifying the class name. This will render whatever scene is in the file.
+          manim render -qh scene.py 2>&1 | tee manim.log
 
       - name: Generate Voice
         if: steps.render.outcome == 'success'
@@ -59,7 +60,7 @@ jobs:
             VOICE=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('voice','en-GB-RyanNeural'))")
             if [ -n "$TEXT" ]; then
               edge-tts --text "$TEXT" --voice "$VOICE" --write-media narration.mp3
-              VIDEO=$(find media -name "output.mp4" | head -1)
+              VIDEO=$(find media -name "*.mp4" | grep -v "partial" | head -1)
               if [ -f narration.mp3 ] && [ -n "$VIDEO" ]; then
                 ffmpeg -y -i "$VIDEO" -i narration.mp3 -c:v copy -c:a aac -b:a 192k -filter_complex "[1:a]apad[a]" -map 0:v -map "[a]" -shortest merged.mp4
                 cp merged.mp4 "$VIDEO"
@@ -70,9 +71,11 @@ jobs:
       - name: Find output
         id: find
         run: |
-          VIDEO=$(find media -name "output.mp4" 2>/dev/null | head -1)
+          # Find any exported MP4 that isn't a partial fragment
+          VIDEO=$(find media -name "*.mp4" 2>/dev/null | grep -v "partial" | head -1)
           if [ -n "$VIDEO" ]; then
-            echo "video=$VIDEO" >> $GITHUB_OUTPUT
+            cp "$VIDEO" final_output.mp4
+            echo "video=final_output.mp4" >> $GITHUB_OUTPUT
             echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "video=" >> $GITHUB_OUTPUT
