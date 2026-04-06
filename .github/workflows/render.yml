@@ -14,8 +14,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Edge-TTS
-        run: pipx install edge-tts
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-manim-v3-${{ runner.os }}
+          restore-keys: pip-manim-
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg libcairo2-dev libpango1.0-dev
+
+      - name: Install Manim + TTS
+        run: pip install manim edge-tts
 
       - name: Read config
         id: config
@@ -27,13 +44,15 @@ jobs:
           fi
           echo "hash=$HASH" >> $GITHUB_OUTPUT
 
-      - name: Render Video (Docker)
+      - name: Render Video
+        id: render
+        continue-on-error: true
         run: |
-          # Use official manim docker image to skip environment setup time
-          # Append || true to prevent failure emails
-          docker run --rm -u root -v $(pwd):/manim -w /manim manimcommunity/manim:latest manim render -qh -o output.mp4 scene.py MainScene > manim.log 2>&1 || true
+          manim render -qh -o output.mp4 scene.py MainScene 2>&1 | tee manim.log
 
       - name: Generate Voice
+        if: steps.render.outcome == 'success'
+        continue-on-error: true
         run: |
           if [ -f voice_config.json ]; then
             TEXT=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('text',''))")
@@ -43,7 +62,7 @@ jobs:
               VIDEO=$(find media -name "output.mp4" | head -1)
               if [ -f narration.mp3 ] && [ -n "$VIDEO" ]; then
                 ffmpeg -y -i "$VIDEO" -i narration.mp3 -c:v copy -c:a aac -b:a 192k -filter_complex "[1:a]apad[a]" -map 0:v -map "[a]" -shortest merged.mp4
-                sudo cp merged.mp4 "$VIDEO"
+                cp merged.mp4 "$VIDEO"
               fi
             fi
           fi
@@ -51,19 +70,21 @@ jobs:
       - name: Find output
         id: find
         run: |
-          VIDEO=$(find media -name "output.mp4" | head -1)
-          if [ -z "$VIDEO" ]; then
-            echo "video=" >> $GITHUB_OUTPUT
-          else
+          VIDEO=$(find media -name "output.mp4" 2>/dev/null | head -1)
+          if [ -n "$VIDEO" ]; then
             echo "video=$VIDEO" >> $GITHUB_OUTPUT
+            echo "found=true" >> $GITHUB_OUTPUT
+          else
+            echo "video=" >> $GITHUB_OUTPUT
+            echo "found=false" >> $GITHUB_OUTPUT
           fi
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v-${{ steps.config.outputs.hash }}
           name: Render ${{ steps.config.outputs.hash }}
           files: |
-            ${{ steps.find.outputs.video }}
+            ${{ steps.find.outputs.found == 'true' && steps.find.outputs.video || '' }}
             manim.log
           make_latest: true
