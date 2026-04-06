@@ -1,25 +1,20 @@
 from manim import *
 
-class SimpleAnimation(Scene):
+class BasicAnimation(Scene):
     def construct(self):
-        # Create text
-        title = Text("Simple Manim Animation")
-        self.play(Write(title))
-        self.wait(1)
+        # 1. Create our objects (Mobjects)
+        square = Square(color=BLUE, fill_opacity=0.5)
+        circle = Circle(color=PINK, fill_opacity=0.8)
+        text = Text("Hello, Manim!", font_size=36).to_edge(UP)
 
-        # Move text to top
-        self.play(title.animate.to_edge(UP))
-
-        # Create a circle
-        circle = Circle()
-        self.play(Create(circle))
+        # 2. Define the animations
+        self.play(Write(text))        # Draw the text
+        self.play(Create(square))     # Draw the square
+        self.wait(1)                  # Pause for a second
+        
+        # 3. Transform the square into the circle
+        self.play(ReplacementTransform(square, circle))
         self.wait(1)
-
-        # Transform circle into square
-        square = Square()
-        self.play(Transform(circle, square))
-        self.wait(1)
-
-        # Fade everything out
-        self.play(FadeOut(title), FadeOut(circle))
-        self.wait(1)
+        
+        # 4. Fade everything out
+        self.play(FadeOut(circle), FadeOut(text))
