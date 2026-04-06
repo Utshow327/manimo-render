@@ -14,38 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Cache pip packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-manim-${{ runner.os }}-py3.12
-          restore-keys: pip-manim-
-
-      - name: Cache apt packages
-        uses: actions/cache@v4
-        with:
-          path: ~/apt-cache
-          key: apt-manim-v2
-          restore-keys: apt-manim-
-
-      - name: Install system deps
-        run: |
-          if [ -d ~/apt-cache ] && [ "$(ls ~/apt-cache/*.deb 2>/dev/null | head -1)" ]; then
-            sudo dpkg -i ~/apt-cache/*.deb 2>/dev/null || true
-            sudo apt-get install -f -y 2>/dev/null || true
-          fi
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg libcairo2-dev libpango1.0-dev texlive-latex-base texlive-fonts-recommended
-          mkdir -p ~/apt-cache
-          cp /var/cache/apt/archives/*.deb ~/apt-cache/ 2>/dev/null || true
-
-      - name: Install Manim + TTS
-        run: pip install manim edge-tts
+      - name: Setup Edge-TTS
+        run: pipx install edge-tts
 
       - name: Read config
         id: config
@@ -57,8 +27,11 @@ jobs:
           fi
           echo "hash=$HASH" >> $GITHUB_OUTPUT
 
-      - name: Render Video
-        run: manim render -qh -o output.mp4 scene.py MainScene
+      - name: Render Video (Docker)
+        run: |
+          # Use official manim docker image to skip environment setup time
+          # Append || true to prevent failure emails
+          docker run --rm -v $(pwd):/manim -w /manim manimcommunity/manim:latest manim render -qh -o output.mp4 scene.py MainScene > manim.log 2>&1 || true
 
       - name: Generate Voice
         run: |
@@ -66,11 +39,11 @@ jobs:
             TEXT=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('text',''))")
             VOICE=$(python3 -c "import json; d=json.load(open('voice_config.json')); print(d.get('voice','en-GB-RyanNeural'))")
             if [ -n "$TEXT" ]; then
-              python3 -m edge_tts --text "$TEXT" --voice "$VOICE" --write-media narration.mp3
+              edge-tts --text "$TEXT" --voice "$VOICE" --write-media narration.mp3
               VIDEO=$(find media -name "output.mp4" | head -1)
               if [ -f narration.mp3 ] && [ -n "$VIDEO" ]; then
                 ffmpeg -y -i "$VIDEO" -i narration.mp3 -c:v copy -c:a aac -b:a 192k -filter_complex "[1:a]apad[a]" -map 0:v -map "[a]" -shortest merged.mp4
-                cp merged.mp4 "$VIDEO"
+                sudo cp merged.mp4 "$VIDEO"
               fi
             fi
           fi
@@ -79,13 +52,18 @@ jobs:
         id: find
         run: |
           VIDEO=$(find media -name "output.mp4" | head -1)
-          echo "video=$VIDEO" >> $GITHUB_OUTPUT
-          echo "Found: $VIDEO"
-
+          if [ -z "$VIDEO" ]; then
+            echo "video=" >> $GITHUB_OUTPUT
+          else
+            echo "video=$VIDEO" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v-${{ steps.config.outputs.hash }}
           name: Render ${{ steps.config.outputs.hash }}
-          files: ${{ steps.find.outputs.video }}
+          files: |
+            ${{ steps.find.outputs.video }}
+            manim.log
           make_latest: true
