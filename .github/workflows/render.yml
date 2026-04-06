@@ -31,7 +31,7 @@ jobs:
         run: |
           # Use official manim docker image to skip environment setup time
           # Append || true to prevent failure emails
-          docker run --rm -v $(pwd):/manim -w /manim manimcommunity/manim:latest manim render -qh -o output.mp4 scene.py MainScene > manim.log 2>&1 || true
+          docker run --rm -u root -v $(pwd):/manim -w /manim manimcommunity/manim:latest manim render -qh -o output.mp4 scene.py MainScene > manim.log 2>&1 || true
 
       - name: Generate Voice
         run: |
