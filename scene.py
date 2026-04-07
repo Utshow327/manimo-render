@@ -8,4 +8,4 @@ class MainScene(Scene):
         self.play(Create(circle))
         self.play(Transform(circle, square))
         self.play(Rotate(square, angle=PI/2))
-        self.play(FadeOut(square))
+        self.play(FadeOut(sqasdf sadf uare))
