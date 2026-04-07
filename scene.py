@@ -1,52 +1,26 @@
 from manim import *
 
-class SolarSystem(Scene):
+class TwelveSecondScene(Scene):
     def construct(self):
-        # 1. Configuration & Colors
-        sun_color = YELLOW
-        planet_data = [
-            {"name": "Mercury", "dist": 1.5, "radius": 0.1, "color": GRAY, "speed": 4.1},
-            {"name": "Venus",   "dist": 2.2, "radius": 0.15, "color": ORANGE, "speed": 1.6},
-            {"name": "Earth",   "dist": 3.2, "radius": 0.16, "color": BLUE, "speed": 1.0},
-            {"name": "Mars",    "dist": 4.2, "radius": 0.12, "color": RED, "speed": 0.5},
-        ]
+        # 1. Setup objects
+        circle = Circle(radius=2, color=BLUE)
+        text = Text("12 Second Timer", font_size=36).to_edge(UP)
 
-        # 2. Create the Sun
-        sun = Dot(radius=0.4, color=sun_color)
-        sun.add(GlowDot(color=sun_color)) # Adds a soft glow effect
-        sun_label = Text("Sun", font_size=20).next_to(sun, UP)
+        # 2. Start Animations
+        # Animation 1: Write text (2 seconds)
+        self.play(Write(text), run_time=2)
         
-        self.add(sun)
-        self.play(FadeIn(sun), Write(sun_label))
-        self.play(FadeOut(sun_label))
-
-        # 3. Create Planets and Orbits
-        planets = []
-        for data in planet_data:
-            # Create the orbit path (visual guide)
-            orbit = Circle(radius=data["dist"], color=WHITE, stroke_opacity=0.2)
-            
-            # Create the planet
-            planet = Dot(radius=data["radius"], color=data["color"])
-            planet.move_to(orbit.point_from_proportion(0))
-            
-            # Add a trace (the "tail" behind the planet)
-            trace = TracedPath(planet.get_center, stroke_opacity=0.5, stroke_color=data["color"])
-            
-            self.add(orbit, trace, planet)
-            planets.append((planet, data["dist"], data["speed"]))
-
-        # 4. Animation Logic
-        # We use an updater to make them rotate at different speeds
-        def update_planet(mob, dt, dist, speed):
-            # Calculate new angle based on time delta and speed
-            # The value 'dt' is the time between frames
-            mob.theta = getattr(mob, "theta", 0) + speed * dt
-            new_pos = [dist * np.cos(mob.theta), dist * np.sin(mob.theta), 0]
-            mob.move_to(new_pos)
-
-        for p, d, s in planets:
-            p.add_updater(lambda m, dt, d=d, s=s: update_planet(m, dt, d, s))
-
-        # Run the animation for 10 seconds
-        self.wait(10)
+        # Animation 2: Create circle (2 seconds)
+        self.play(Create(circle), run_time=2)
+        
+        # Animation 3: Transform circle to square (2 seconds)
+        square = Square(side_length=3, color=RED)
+        self.play(ReplacementTransform(circle, square), run_time=2)
+        
+        # Animation 4: Rotate the square (3 seconds)
+        self.play(Rotate(square, angle=PI*2), run_time=3)
+        
+        # 5. Final Wait (1 second)
+        # Total so far: 2 + 2 + 2 + 3 = 9 seconds. 
+        # We need 3 more seconds to reach 12.
+        self.wait(5)
