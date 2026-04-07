@@ -1,26 +1,49 @@
 from manim import *
 
-class TwelveSecondScene(Scene):
+class MainScene(Scene):
     def construct(self):
-        # 1. Setup objects
-        circle = Circle(radius=2, color=BLUE)
-        text = Text("12 Second Timer", font_size=36).to_edge(UP)
+        # Create a cricket field
+        field = Circle(radius=5, color=GREEN, stroke_width=2)
+        self.add(field)
 
-        # 2. Start Animations
-        # Animation 1: Write text (2 seconds)
-        self.play(Write(text), run_time=2)
-        
-        # Animation 2: Create circle (2 seconds)
-        self.play(Create(circle), run_time=2)
-        
-        # Animation 3: Transform circle to square (2 seconds)
-        square = Square(side_length=3, color=RED)
-        self.play(ReplacementTransform(circle, square), run_time=2)
-        
-        # Animation 4: Rotate the square (3 seconds)
-        self.play(Rotate(square, angle=PI*2), run_time=3)
-        
-        # 5. Final Wait (1 second)
-        # Total so far: 2 + 2 + 2 + 3 = 9 seconds. 
-        # We need 3 more seconds to reach 12.
-        self.wait(5)
+        # Create wickets
+        wicket1 = Rectangle(width=0.5, height=1, color=WHITE, stroke_width=2)
+        wicket1.shift(4*RIGHT)
+        wicket2 = Rectangle(width=0.5, height=1, color=WHITE, stroke_width=2)
+        wicket2.shift(4*LEFT)
+        self.add(wicket1, wicket2)
+
+        # Create players
+        player1 = Circle(radius=0.2, color=BLUE, stroke_width=2)
+        player1.shift(3*RIGHT)
+        player2 = Circle(radius=0.2, color=RED, stroke_width=2)
+        player2.shift(3*LEFT)
+        player3 = Circle(radius=0.2, color=YELLOW, stroke_width=2)
+        player3.shift(2*UP)
+        player4 = Circle(radius=0.2, color=PURPLE, stroke_width=2)
+        player4.shift(2*DOWN)
+        self.add(player1, player2, player3, player4)
+
+        # Animate players running
+        self.play(MoveAlongPath(player1, line_start=player1.get_center(), end=player2.get_center(), stroke_width=2, color=BLUE), 
+                  MoveAlongPath(player2, line_start=player2.get_center(), end=player1.get_center(), stroke_width=2, color=RED), 
+                  MoveAlongPath(player3, line_start=player3.get_center(), end=player4.get_center(), stroke_width=2, color=YELLOW), 
+                  MoveAlongPath(player4, line_start=player4.get_center(), end=player3.get_center(), stroke_width=2, color=PURPLE), 
+                  rate_func=linear, run_time=2)
+
+        # Animate ball being thrown
+        ball = Circle(radius=0.1, color=WHITE, stroke_width=2)
+        ball.shift(2*UP)
+        self.add(ball)
+        self.play(MoveAlongPath(ball, line_start=ball.get_center(), end=player1.get_center(), stroke_width=2, color=WHITE), 
+                  rate_func=linear, run_time=1)
+
+        # Animate players catching ball
+        self.play(MoveAlongPath(player1, line_start=player1.get_center(), end=ball.get_center(), stroke_width=2, color=BLUE), 
+                  rate_func=linear, run_time=0.5)
+        self.play(FadeOut(ball), rate_func=linear, run_time=0.5)
+
+        # Animate players celebrating
+        self.play(Rotate(player1, angle=PI/2), Rotate(player2, angle=PI/2), 
+                  Rotate(player3, angle=PI/2), Rotate(player4, angle=PI/2), 
+                  rate_func=linear, run_time=1)
