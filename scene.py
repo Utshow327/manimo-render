@@ -1,84 +1,177 @@
 from manim import *
 
-class MainScene(Scene):
+class TheStoryOfLines(Scene):
     def construct(self):
-        # Create the Sun
-        sun = Circle(color=YELLOW, radius=1.5)
-        sun.set_fill(YELLOW, opacity=0.8)
+        self.intro_sequence()
+        self.history_sequence()
+        self.mechanics_sequence()
+        self.the_real_why_sequence()
+        self.outro_sequence()
 
-        # Create the planets
-        mercury = Circle(color=GREY, radius=0.2)
-        mercury.set_fill(GREY, opacity=0.8)
-        venus = Circle(color=WHITE, radius=0.4)
-        venus.set_fill(WHITE, opacity=0.8)
-        earth = Circle(color=BLUE, radius=0.5)
-        earth.set_fill(BLUE, opacity=0.8)
-        mars = Circle(color=RED, radius=0.3)
-        mars.set_fill(RED, opacity=0.8)
-        jupiter = Circle(color="#964B00", radius=1.2)
-        jupiter.set_fill("#964B00", opacity=0.8)
-        saturn = Circle(color="#FFD700", radius=1.0)
-        saturn.set_fill("#FFD700", opacity=0.8)
-        uranus = Circle(color="#ADD8E6", radius=0.8)
-        uranus.set_fill("#ADD8E6", opacity=0.8)
-        neptune = Circle(color="#0000FF", radius=0.6)
-        neptune.set_fill("#0000FF", opacity=0.8)
+    def intro_sequence(self):
+        # Title Card
+        title = Text("The Power of the Straight Line", font_size=48, color=BLUE)
+        subtitle = Text("Why do we even learn this?", font_size=32).next_to(title, DOWN)
+        
+        self.play(Write(title), run_time=2)
+        self.play(FadeIn(subtitle, shift=UP))
+        self.wait(3) # Imagine narrator speaking here
+        
+        self.play(FadeOut(title), FadeOut(subtitle))
 
-        # Create the orbits
-        mercury_orbit = Circle(color=WHITE, radius=2.5)
-        mercury_orbit.set_stroke(width=0.5)
-        venus_orbit = Circle(color=WHITE, radius=4.0)
-        venus_orbit.set_stroke(width=0.5)
-        earth_orbit = Circle(color=WHITE, radius=5.5)
-        earth_orbit.set_stroke(width=0.5)
-        mars_orbit = Circle(color=WHITE, radius=7.0)
-        mars_orbit.set_stroke(width=0.5)
-        jupiter_orbit = Circle(color=WHITE, radius=9.0)
-        jupiter_orbit.set_stroke(width=0.5)
-        saturn_orbit = Circle(color=WHITE, radius=11.0)
-        saturn_orbit.set_stroke(width=0.5)
-        uranus_orbit = Circle(color=WHITE, radius=13.0)
-        uranus_orbit.set_stroke(width=0.5)
-        neptune_orbit = Circle(color=WHITE, radius=15.0)
-        neptune_orbit.set_stroke(width=0.5)
+        # The big question
+        question = Text("What problem does a line solve?", font_size=40)
+        self.play(Write(question))
+        self.wait(3)
+        self.play(FadeOut(question))
 
-        # Add the Sun and the planets to the scene
-        self.add(sun)
+    def history_sequence(self):
+        # Section 1: History
+        history_title = Text("Part 1: How did this happen?", font_size=36, color=YELLOW).to_edge(UP)
+        self.play(FadeIn(history_title, shift=DOWN))
 
-        # Add the planets to the scene
-        self.add(mercury)
-        self.add(venus)
-        self.add(earth)
-        self.add(mars)
-        self.add(jupiter)
-        self.add(saturn)
-        self.add(uranus)
-        self.add(neptune)
+        # Geometry vs Algebra
+        geo_text = Text("Geometry (Shapes)", font_size=30).shift(LEFT * 3)
+        alg_text = Text("Algebra (Numbers)", font_size=30).shift(RIGHT * 3)
+        
+        triangle = Triangle(color=GREEN).next_to(geo_text, DOWN)
+        equations = MathTex("2x + 4 = 10").next_to(alg_text, DOWN)
 
-        # Add the orbits to the scene
-        self.add(mercury_orbit)
-        self.add(venus_orbit)
-        self.add(earth_orbit)
-        self.add(mars_orbit)
-        self.add(jupiter_orbit)
-        self.add(saturn_orbit)
-        self.add(uranus_orbit)
-        self.add(neptune_orbit)
+        self.play(Write(geo_text), Create(triangle))
+        self.wait(2)
+        self.play(Write(alg_text), Write(equations))
+        self.wait(2)
 
-        # Animate the planets along their orbits
+        # Descartes bridges the gap
+        bridge_text = Text("René Descartes built a bridge.", font_size=24, color=LIGHT_PINK).shift(DOWN * 2)
+        self.play(Write(bridge_text))
+        self.wait(3)
+
+        # Transform into a coordinate plane
+        plane = NumberPlane(
+            x_range=[-5, 5, 1],
+            y_range=[-4, 4, 1],
+            background_line_style={"stroke_opacity": 0.4}
+        )
+        
         self.play(
-            Rotate(mercury, about_point=ORIGIN, angle=10 * TAU, rate_func=linear, run_time=10),
-            Rotate(venus, about_point=ORIGIN, angle=8 * TAU, rate_func=linear, run_time=15),
-            Rotate(earth, about_point=ORIGIN, angle=6 * TAU, rate_func=linear, run_time=20),
-            Rotate(mars, about_point=ORIGIN, angle=5 * TAU, rate_func=linear, run_time=25),
-            Rotate(jupiter, about_point=ORIGIN, angle=3 * TAU, rate_func=linear, run_time=35),
-            Rotate(saturn, about_point=ORIGIN, angle=2.5 * TAU, rate_func=linear, run_time=40),
-            Rotate(uranus, about_point=ORIGIN, angle=2 * TAU, rate_func=linear, run_time=50),
-            Rotate(neptune, about_point=ORIGIN, angle=1.5 * TAU, rate_func=linear, run_time=60),
+            FadeOut(geo_text, triangle, alg_text, equations, bridge_text),
+            Create(plane),
+            run_time=3
+        )
+        self.wait(3)
+        self.play(FadeOut(plane), FadeOut(history_title))
+
+    def mechanics_sequence(self):
+        # Section 2: How they work
+        mech_title = Text("Part 2: How do they work?", font_size=36, color=YELLOW).to_edge(UP)
+        self.play(FadeIn(mech_title, shift=DOWN))
+
+        axes = Axes(
+            x_range=[-5, 5, 1],
+            y_range=[-5, 5, 1],
+            axis_config={"color": WHITE},
+        )
+        self.play(Create(axes), run_time=2)
+
+        # The famous equation
+        equation = MathTex("y", "=", "m", "x", "+", "b", font_size=48)
+        equation.to_corner(UL).shift(DOWN)
+        equation.set_color_by_tex("m", RED)
+        equation.set_color_by_tex("b", GREEN)
+        
+        self.play(Write(equation))
+        self.wait(2)
+
+        # Demonstrating 'b' (y-intercept)
+        b_text = Text("b = The Start (y-intercept)", font_size=24, color=GREEN).next_to(equation, DOWN, aligned_edge=LEFT)
+        self.play(FadeIn(b_text, shift=RIGHT))
+        
+        dot = Dot(point=axes.c2p(0, 1), color=GREEN)
+        self.play(Create(dot))
+        self.wait(2)
+
+        # Demonstrating 'm' (slope)
+        m_text = Text("m = The Trend (Rate of Change)", font_size=24, color=RED).next_to(b_text, DOWN, aligned_edge=LEFT)
+        self.play(FadeIn(m_text, shift=RIGHT))
+
+        # Drawing the line
+        line = axes.plot(lambda x: 0.5 * x + 1, color=BLUE)
+        self.play(Create(line), run_time=3)
+        self.wait(4)
+
+        # Show slope step (Rise over Run)
+        p1 = axes.c2p(0, 1)
+        p2 = axes.c2p(2, 2)
+        run_line = Line(p1, axes.c2p(2, 1), color=YELLOW)
+        rise_line = Line(axes.c2p(2, 1), p2, color=ORANGE)
+        
+        self.play(Create(run_line))
+        self.play(Create(rise_line))
+        self.wait(3)
+
+        self.play(
+            FadeOut(axes, line, dot, equation, b_text, m_text, run_line, rise_line, mech_title)
         )
 
-        # Set the camera to zoom out
-        self.camera.frame.set_width(25)
+    def the_real_why_sequence(self):
+        # Section 3: The ultimate purpose
+        why_title = Text("Part 3: The Ultimate Trick", font_size=36, color=YELLOW).to_edge(UP)
+        self.play(FadeIn(why_title, shift=DOWN))
 
-        # Wait for 10 seconds before closing the scene
-        self.wait(10)
+        truth_text = Text("The real world is curvy and complex.", font_size=30)
+        self.play(Write(truth_text))
+        self.wait(2)
+        self.play(truth_text.animate.to_edge(UP).shift(DOWN))
+
+        # Create a complex curve
+        axes = Axes(x_range=[-3, 3], y_range=[-2, 8], x_length=8, y_length=5)
+        curve = axes.plot(lambda x: x**2, color=PURPLE)
+        
+        self.play(Create(axes))
+        self.play(Create(curve), run_time=3)
+        self.wait(2)
+
+        zoom_text = Text("But if you zoom in enough...", font_size=24).next_to(truth_text, DOWN)
+        self.play(Write(zoom_text))
+
+        # Tangent line concept (Calculus preview)
+        tracker = ValueTracker(-2)
+        
+        tangent_line = always_redraw(
+            lambda: axes.get_secant_slope_group(
+                x=tracker.get_value(),
+                graph=curve,
+                dx=0.01,
+                secant_line_color=GREEN,
+                secant_line_length=4
+            )
+        )
+        
+        moving_dot = always_redraw(
+            lambda: Dot(axes.c2p(tracker.get_value(), tracker.get_value()**2), color=YELLOW)
+        )
+
+        self.play(Create(tangent_line), Create(moving_dot))
+        self.wait(1)
+        
+        # Animate the tangent line moving along the curve
+        self.play(tracker.animate.set_value(2), run_time=6, rate_func=there_and_back)
+        self.wait(2)
+
+        calc_text = Text("Everything looks like a straight line.", font_size=30, color=GREEN).next_to(zoom_text, DOWN)
+        self.play(Write(calc_text))
+        self.wait(4)
+
+        self.play(FadeOut(VGroup(axes, curve, tangent_line, moving_dot, truth_text, zoom_text, calc_text, why_title)))
+
+    def outro_sequence(self):
+        # Conclusion
+        final_text = Text("Lines are how we predict the future.", font_size=36, color=BLUE)
+        sub_final = Text("They turn chaos into predictable patterns.", font_size=28).next_to(final_text, DOWN)
+        
+        self.play(Write(final_text))
+        self.play(FadeIn(sub_final, shift=UP))
+        self.wait(5)
+        
+        self.play(FadeOut(final_text), FadeOut(sub_final))
