@@ -23,4 +23,6 @@ class TwelveSecondScene(Scene):
         # 5. Final Wait (1 second)
         # Total so far: 2 + 2 + 2 + 3 = 9 seconds. 
         # We need 3 more seconds to reach 12.
-        self.wait(1)
+        self.wai
+        
+        jkgft(1)
