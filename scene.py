@@ -1,21 +1,7 @@
-from manimlib import *
+from manim import *
 
-class InteractiveExample(Scene):
+class MainScene(Scene):
     def construct(self):
-        # Create a circle
-        circle = Circle(color=BLUE)
-
-        # Create text
-        text = Text("Hello bro 😎")
-
-        # Show circle
-        self.play(ShowCreation(circle))
-
-        # Move circle
-        self.play(circle.animate.shift(RIGHT * 2))
-
-        # Show text
-        self.play(Write(text))
-
-        # Wait so you can see it
-        self.wait()
+        circle = Circle(color=BLUE, fill_opacity=0.5)
+        self.play(Create(circle))
+        self.wait(2)
