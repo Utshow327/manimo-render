@@ -1,31 +1,21 @@
 from manim import *
 
-class HowPlanesFly(Scene):
+class BasicAnimation(Scene):
     def construct(self):
+            # 1. Create our objects (Mobjects)
+                    square = Square(color=BLUE, fill_opacity=0.5)
+                            circle = Circle(color=PINK, fill_opacity=0.8)
+                                    text = Text("Hello, Manim!", font_size=36).to_edge(UP)
 
-            # Title
-                    title = Text("How Planes Fly")
-                            title.to_edge(UP)
-                                    self.play(Write(title))
-                                            self.wait(1)
-
-                                                    # Simple plane (body + wing)
-                                                            body = Rectangle(width=4, height=0.6)
-                                                                    body.set_fill(BLUE, opacity=1)
-
-                                                                            wing = Polygon(
-                                                                                        [-2, 0.3, 0],
-                                                                                                    [2, 0.3, 0],
-                                                                                                                [0, 1.2, 0]
-                                                                                                                        )
-                                                                                                                                wing.set_fill(YELLOW, opacity=1)
-
-                                                                                                                                        plane = VGroup(body, wing)
-                                                                                                                                                plane.move_to(ORIGIN)
-
-                                                                                                                                                        self.play(FadeIn(plane))
-                                                                                                                                                                self.wait(1)
-
-                                                                                                                                                                        # Airflow arrows
-                                                                                                                                                                                arrow_top = Arrow(LEFT*5 + UP*2, RIGHT*5 + UP*2, buff=0)
-                                                                                                                                                                                        arrow_bottom = Arrow(LEFT*5 + DOWN*1.5, RIGHT*5 + DOWN*1.5
+                                            # 2. Define the animations
+                                                    self.play(Write(text))        # Draw the text
+                                                            self.play(Create(square))     # Draw the square
+                                                                    self.wait(1)                  # Pause for a second
+                                                                            
+                                                                                    # 3. Transform the square into the circle
+                                                                                            self.play(ReplacementTransform(square, circle))
+                                                                                                    self.wait(1)
+                                                                                                            
+                                                                                                                    # 4. Fade everything out
+                                                                                                                            self.play(FadeOut(circle), FadeOut(text))
+                                                                                                                            
