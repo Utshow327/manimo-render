@@ -2,34 +2,100 @@ from manim import *
 
 class MainScene(Scene):
     def construct(self):
-        # Create a square with side length a
-        square_a = Square(side_length=4, color=BLUE)
-        square_a.shift(LEFT * 2)
+        # Introduction
+        intro_text = Text("Fourier Transform", font_size=64)
+        self.play(FadeIn(intro_text))
+        self.wait(2)
+        self.play(FadeOut(intro_text))
 
-        # Create a square with side length b
-        square_b = Square(side_length=3, color=RED)
-        square_b.shift(RIGHT * 2)
+        # Time domain signal
+        time_domain_signal = Axes(
+            x_range=[0, 10, 1],
+            y_range=[-1, 1, 0.5],
+            x_length=8,
+            y_length=4,
+            axis_config={"include_tip": False},
+        )
+        time_domain_signal_graph = time_domain_signal.plot(
+            lambda x: np.sin(x) + 0.5 * np.sin(3 * x), x_range=[0, 10, 0.01], color=BLUE
+        )
+        time_domain_signal_text = Text("Time Domain Signal", font_size=32)
+        time_domain_signal_text.next_to(time_domain_signal, UP)
+        self.play(FadeIn(time_domain_signal), Create(time_domain_signal_graph), FadeIn(time_domain_signal_text))
+        self.wait(2)
 
-        # Create a square with side length c (hypotenuse)
-        square_c = Square(side_length=5, color=YELLOW)
-        square_c.shift(DOWN * 2)
+        # Frequency domain signal
+        frequency_domain_signal = Axes(
+            x_range=[0, 10, 1],
+            y_range=[0, 2, 0.5],
+            x_length=8,
+            y_length=4,
+            axis_config={"include_tip": False},
+        )
+        frequency_domain_signal_graph = frequency_domain_signal.plot(
+            lambda x: np.abs(np.fft.fft(np.sin(np.linspace(0, 10, 1000)) + 0.5 * np.sin(3 * np.linspace(0, 10, 1000)))),
+            x_range=[0, 10, 0.01],
+            color=RED,
+        )
+        frequency_domain_signal_text = Text("Frequency Domain Signal", font_size=32)
+        frequency_domain_signal_text.next_to(frequency_domain_signal, UP)
+        self.play(
+            Transform(time_domain_signal, frequency_domain_signal),
+            Transform(time_domain_signal_graph, frequency_domain_signal_graph),
+            Transform(time_domain_signal_text, frequency_domain_signal_text),
+        )
+        self.wait(2)
 
-        # Create right triangle
-        triangle = Polygon(ORIGIN, UP * 4, RIGHT * 3, color=GREEN, fill_opacity=0.5)
-        triangle.shift(LEFT * 0.5 + UP * 0.5)
+        # Transform explanation
+        transform_explanation_text = Text("Fourier Transform: Time → Frequency", font_size=48)
+        self.play(FadeIn(transform_explanation_text))
+        self.wait(2)
+        self.play(FadeOut(transform_explanation_text))
 
-        # Create labels
-        label_a = Text("a", font_size=24).next_to(square_a, UP)
-        label_b = Text("b", font_size=24).next_to(square_b, UP)
-        label_c = Text("c", font_size=24).next_to(square_c, UP)
-        label_triangle = Text("a^2 + b^2 = c^2", font_size=24).next_to(triangle, DOWN)
+        # Inverse Fourier Transform
+        inverse_fourier_transform_text = Text("Inverse Fourier Transform: Frequency → Time", font_size=48)
+        self.play(FadeIn(inverse_fourier_transform_text))
+        self.wait(2)
+        self.play(FadeOut(inverse_fourier_transform_text))
 
-        # Animations
-        self.play(FadeIn(square_a), FadeIn(square_b), FadeIn(square_c))
-        self.play(Create(triangle), FadeIn(label_a), FadeIn(label_b), FadeIn(label_c))
-        self.play(Write(label_triangle))
-        self.play(triangle.animate.shift(UP * 1.5), label_triangle.animate.shift(UP * 1.5))
-        self.play(square_a.animate.shift(UP * 1), square_b.animate.shift(UP * 1))
-        self.play(square_a.animate.scale(0.5), square_b.animate.scale(0.5))
-        self.play(triangle.animate.scale(0.5), label_triangle.animate.scale(0.5))
+        # Example of Fourier Transform application
+        example_text = Text("Example: Filtering a Signal", font_size=48)
+        self.play(FadeIn(example_text))
+        self.wait(2)
+
+        # Filtering a signal
+        signal = Axes(
+            x_range=[0, 10, 1],
+            y_range=[-1, 1, 0.5],
+            x_length=8,
+            y_length=4,
+            axis_config={"include_tip": False},
+        )
+        signal_graph = signal.plot(
+            lambda x: np.sin(x) + 0.5 * np.sin(3 * x) + 0.1 * np.sin(10 * x), x_range=[0, 10, 0.01], color=BLUE
+        )
+        filtered_signal = Axes(
+            x_range=[0, 10, 1],
+            y_range=[-1, 1, 0.5],
+            x_length=8,
+            y_length=4,
+            axis_config={"include_tip": False},
+        )
+        filtered_signal_graph = filtered_signal.plot(
+            lambda x: np.sin(x) + 0.5 * np.sin(3 * x), x_range=[0, 10, 0.01], color=RED
+        )
+        self.play(FadeIn(signal), Create(signal_graph))
+        self.wait(2)
+        self.play(
+            Transform(signal, filtered_signal),
+            Transform(signal_graph, filtered_signal_graph),
+        )
+        self.wait(2)
+
+        # Conclusion
+        conclusion_text = Text("Conclusion: Fourier Transform is a powerful tool for signal processing", font_size=48)
+        self.play(FadeIn(conclusion_text))
+        self.wait(2)
+        self.play(FadeOut(conclusion_text))
+
         self.wait(15)
