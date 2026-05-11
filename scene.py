@@ -2,96 +2,90 @@ from manim import *
 
 class MainScene(Scene):
     def construct(self):
-        # Create the sun
-        sun = Circle(color=YELLOW, radius=1.5)
-        sun.set_fill(YELLOW, opacity=1)
-        self.add(sun)
+        # Introduction
+        intro_text = Text("How Planes Fly", font_size=64)
+        self.play(Create(intro_text), run_time=2)
+        self.wait(1)
+        self.play(FadeOut(intro_text), run_time=1)
 
-        # Create the planets
-        mercury = Circle(color=GREY, radius=0.2)
-        mercury.set_fill(GREY, opacity=1)
-        mercury.shift(2 * LEFT)
+        # Basic Principle: Lift
+        lift_text = Text("Lift", font_size=48)
+        self.play(Create(lift_text), run_time=1)
+        self.wait(1)
+        wing_shape = Polygon([-2, -1, 0], [2, -1, 0], [2, 1, 0], [-2, 1, 0], color=BLUE)
+        self.play(Create(wing_shape), run_time=1)
+        self.wait(1)
+        air_flow = Arrow([-3, 0, 0], [3, 0, 0], color=RED)
+        self.play(Create(air_flow), run_time=1)
+        self.wait(1)
+        lift_arrow = Arrow([0, -1, 0], [0, 1, 0], color=GREEN)
+        self.play(Create(lift_arrow), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(lift_text), FadeOut(wing_shape), FadeOut(air_flow), FadeOut(lift_arrow), run_time=1)
 
-        venus = Circle(color=WHITE, radius=0.4)
-        venus.set_fill(WHITE, opacity=1)
-        venus.shift(3.5 * LEFT)
+        # Basic Principle: Thrust
+        thrust_text = Text("Thrust", font_size=48)
+        self.play(Create(thrust_text), run_time=1)
+        self.wait(1)
+        engine_shape = Circle(radius=0.5, color=YELLOW)
+        self.play(Create(engine_shape), run_time=1)
+        self.wait(1)
+        thrust_arrow = Arrow([0, 0, 0], [2, 0, 0], color=ORANGE)
+        self.play(Create(thrust_arrow), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(thrust_text), FadeOut(engine_shape), FadeOut(thrust_arrow), run_time=1)
 
-        earth = Circle(color=BLUE, radius=0.5)
-        earth.set_fill(BLUE, opacity=1)
-        earth.shift(5 * LEFT)
+        # Basic Principle: Drag
+        drag_text = Text("Drag", font_size=48)
+        self.play(Create(drag_text), run_time=1)
+        self.wait(1)
+        drag_arrow = Arrow([0, 0, 0], [-2, 0, 0], color=PURPLE)
+        self.play(Create(drag_arrow), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(drag_text), FadeOut(drag_arrow), run_time=1)
 
-        mars = Circle(color=RED, radius=0.3)
-        mars.set_fill(RED, opacity=1)
-        mars.shift(6.5 * LEFT)
+        # Advanced: Control Surfaces
+        control_surfaces_text = Text("Control Surfaces", font_size=48)
+        self.play(Create(control_surfaces_text), run_time=1)
+        self.wait(1)
+        aileron_shape = Rectangle(width=1, height=0.5, color=BLUE)
+        self.play(Create(aileron_shape), run_time=1)
+        self.wait(1)
+        elevator_shape = Rectangle(width=1, height=0.5, color=RED)
+        self.play(Create(elevator_shape), run_time=1)
+        self.wait(1)
+        rudder_shape = Rectangle(width=1, height=0.5, color=YELLOW)
+        self.play(Create(rudder_shape), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(control_surfaces_text), FadeOut(aileron_shape), FadeOut(elevator_shape), FadeOut(rudder_shape), run_time=1)
 
-        jupiter = Circle(color="#964B00", radius=1)
-        jupiter.set_fill("#964B00", opacity=1)
-        jupiter.shift(9 * LEFT)
+        # Advanced: Aerodynamics
+        aerodynamics_text = Text("Aerodynamics", font_size=48)
+        self.play(Create(aerodynamics_text), run_time=1)
+        self.wait(1)
+        airfoil_shape = ParametricCurve(lambda t: [t, 0.2*t**2, 0], t_min=-2, t_max=2, color=GREEN)
+        self.play(Create(airfoil_shape), run_time=1)
+        self.wait(1)
+        boundary_layer = Rectangle(width=2, height=0.1, color=ORANGE)
+        self.play(Create(boundary_layer), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(aerodynamics_text), FadeOut(airfoil_shape), FadeOut(boundary_layer), run_time=1)
 
-        saturn = Circle(color="#C9C4B5", radius=0.8)
-        saturn.set_fill("#C9C4B5", opacity=1)
-        saturn.shift(11.5 * LEFT)
+        # Advanced: Flight Envelope
+        flight_envelope_text = Text("Flight Envelope", font_size=48)
+        self.play(Create(flight_envelope_text), run_time=1)
+        self.wait(1)
+        envelope_shape = Circle(radius=2, color=BLUE)
+        self.play(Create(envelope_shape), run_time=1)
+        self.wait(1)
+        stall_line = Line([-2, 0, 0], [2, 0, 0], color=RED)
+        self.play(Create(stall_line), run_time=1)
+        self.wait(1)
+        self.play(FadeOut(flight_envelope_text), FadeOut(envelope_shape), FadeOut(stall_line), run_time=1)
 
-        uranus = Circle(color="#56B3FA", radius=0.6)
-        uranus.set_fill("#56B3FA", opacity=1)
-        uranus.shift(14 * LEFT)
-
-        neptune = Circle(color="#2E4053", radius=0.5)
-        neptune.set_fill("#2E4053", opacity=1)
-        neptune.shift(16.5 * LEFT)
-
-        # Create the orbits
-        mercury_orbit = Circle(color=GREY, radius=2)
-        mercury_orbit.set_stroke(width=0.5)
-
-        venus_orbit = Circle(color=WHITE, radius=3.5)
-        venus_orbit.set_stroke(width=0.5)
-
-        earth_orbit = Circle(color=BLUE, radius=5)
-        earth_orbit.set_stroke(width=0.5)
-
-        mars_orbit = Circle(color=RED, radius=6.5)
-        mars_orbit.set_stroke(width=0.5)
-
-        jupiter_orbit = Circle(color="#964B00", radius=9)
-        jupiter_orbit.set_stroke(width=0.5)
-
-        saturn_orbit = Circle(color="#C9C4B5", radius=11.5)
-        saturn_orbit.set_stroke(width=0.5)
-
-        uranus_orbit = Circle(color="#56B3FA", radius=14)
-        uranus_orbit.set_stroke(width=0.5)
-
-        neptune_orbit = Circle(color="#2E4053", radius=16.5)
-        neptune_orbit.set_stroke(width=0.5)
-
-        # Add the planets and orbits to the scene
-        self.add(mercury_orbit)
-        self.add(venus_orbit)
-        self.add(earth_orbit)
-        self.add(mars_orbit)
-        self.add(jupiter_orbit)
-        self.add(saturn_orbit)
-        self.add(uranus_orbit)
-        self.add(neptune_orbit)
-
-        self.add(mercury)
-        self.add(venus)
-        self.add(earth)
-        self.add(mars)
-        self.add(jupiter)
-        self.add(saturn)
-        self.add(uranus)
-        self.add(neptune)
-
-        # Animate the planets moving along their orbits
-        self.play(MoveAlongPath(mercury, mercury_orbit), rate_func=linear, run_time=10)
-        self.play(MoveAlongPath(venus, venus_orbit), rate_func=linear, run_time=15)
-        self.play(MoveAlongPath(earth, earth_orbit), rate_func=linear, run_time=20)
-        self.play(MoveAlongPath(mars, mars_orbit), rate_func=linear, run_time=25)
-        self.play(MoveAlongPath(jupiter, jupiter_orbit), rate_func=linear, run_time=30)
-        self.play(MoveAlongPath(saturn, saturn_orbit), rate_func=linear, run_time=35)
-        self.play(MoveAlongPath(uranus, uranus_orbit), rate_func=linear, run_time=40)
-        self.play(MoveAlongPath(neptune, neptune_orbit), rate_func=linear, run_time=45)
-
+        # Conclusion
+        conclusion_text = Text("How Planes Fly: A Comprehensive Guide", font_size=48)
+        self.play(Create(conclusion_text), run_time=2)
+        self.wait(5)
+        self.play(FadeOut(conclusion_text), run_time=2)
         self.wait(15)
